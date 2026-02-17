@@ -1,11 +1,13 @@
 import { Link, useLocation } from "react-router-dom";
-import { GraduationCap, Menu, X } from "lucide-react";
+import { GraduationCap, Menu, X, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useTheme } from "@/components/ThemeProvider";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const { theme, toggle } = useTheme();
 
   const navLinks = [
     { to: "/", label: "Home" },
@@ -34,6 +36,13 @@ const Header = () => {
               {l.label}
             </Link>
           ))}
+          <button
+            onClick={toggle}
+            className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </button>
           <Button asChild size="sm" variant="outline">
             <Link to="/login">Login</Link>
           </Button>
@@ -62,6 +71,13 @@ const Header = () => {
             </Link>
           ))}
           <div className="flex gap-3 pt-2">
+            <button
+              onClick={toggle}
+              className="p-2 rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+            </button>
             <Button asChild size="sm" variant="outline" className="flex-1">
               <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
             </Button>
