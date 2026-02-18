@@ -1,6 +1,7 @@
 import { User, BarChart3, Clock, Trophy, Sparkles } from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
+import { useAuth } from "@/hooks/useAuth";
 
 const cards = [
   { title: "Performance Summary", icon: BarChart3, desc: "Your scores and progress will appear here." },
@@ -10,6 +11,8 @@ const cards = [
 ];
 
 const Dashboard = () => {
+  const { user, profile } = useAuth();
+
   return (
     <PageTransition>
       <div className="min-h-screen flex flex-col bg-background">
@@ -21,8 +24,10 @@ const Dashboard = () => {
                 <User className="h-8 w-8 text-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-heading text-foreground">Welcome, Learner</h1>
-                <p className="text-muted-foreground text-sm">learner@example.com</p>
+                <h1 className="text-2xl font-heading text-foreground">
+                  Welcome, {profile?.full_name || "Learner"}
+                </h1>
+                <p className="text-muted-foreground text-sm">{user?.email}</p>
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-6">

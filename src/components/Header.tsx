@@ -1,19 +1,27 @@
-import { Link, useLocation } from "react-router-dom";
-import { GraduationCap, Menu, X, Sun, Moon } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { GraduationCap, Menu, X, Sun, Moon, LogOut } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, toggle } = useTheme();
+  const { user, profile, signOut } = useAuth();
 
   const navLinks = [
     { to: "/", label: "Home" },
     { to: "/grades", label: "Grades" },
-    { to: "/dashboard", label: "Dashboard" },
+    ...(user ? [{ to: "/dashboard", label: "Dashboard" }] : []),
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   return (
     <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
@@ -43,12 +51,23 @@ const Header = () => {
           >
             {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
-          <Button asChild size="sm" variant="outline">
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link to="/signup">Sign Up</Link>
-          </Button>
+          {user ? (
+            <>
+              <span className="text-sm text-muted-foreground">{profile?.full_name || user.email}</span>
+              <Button size="sm" variant="outline" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4 mr-1" /> Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild size="sm" variant="outline">
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/signup">Sign Up</Link>
+              </Button>
+            </>
+          )}
         </nav>
 
         {/* Mobile toggle */}
@@ -78,12 +97,20 @@ const Header = () => {
             >
               {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
-            <Button asChild size="sm" variant="outline" className="flex-1">
-              <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
-            </Button>
-            <Button asChild size="sm" className="flex-1">
-              <Link to="/signup" onClick={() => setMenuOpen(false)}>Sign Up</Link>
-            </Button>
+            {user ? (
+              <Button size="sm" variant="outline" className="flex-1" onClick={() => { handleSignOut(); setMenuOpen(false); }}>
+                <LogOut className="h-4 w-4 mr-1" /> Sign Out
+              </Button>
+            ) : (
+              <>
+                <Button asChild size="sm" variant="outline" className="flex-1">
+                  <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
+                </Button>
+                <Button asChild size="sm" className="flex-1">
+                  <Link to="/signup" onClick={() => setMenuOpen(false)}>Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
         </nav>
       )}
