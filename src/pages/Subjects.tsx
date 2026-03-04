@@ -1,26 +1,32 @@
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import {
-  Calculator, Atom, Leaf, BookText, Globe, Landmark,
-  PiggyBank, Briefcase, TrendingUp, Monitor,
-} from "lucide-react";
+import * as Icons from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
+import { supabase } from "@/integrations/supabase/client";
 
-const subjects = [
-  { name: "Mathematics", icon: Calculator },
-  { name: "Physical Sciences", icon: Atom },
-  { name: "Life Sciences", icon: Leaf },
-  { name: "English", icon: BookText },
-  { name: "Geography", icon: Globe },
-  { name: "History", icon: Landmark },
-  { name: "Accounting", icon: PiggyBank },
-  { name: "Business Studies", icon: Briefcase },
-  { name: "Economics", icon: TrendingUp },
-  { name: "Computer Applications Technology", icon: Monitor },
-];
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  Calculator: Icons.Calculator, Atom: Icons.Atom, Leaf: Icons.Leaf,
+  BookText: Icons.BookText, Globe: Icons.Globe, Landmark: Icons.Landmark,
+  PiggyBank: Icons.PiggyBank, Briefcase: Icons.Briefcase, TrendingUp: Icons.TrendingUp,
+  Monitor: Icons.Monitor,
+};
 
 const Subjects = () => {
   const { grade } = useParams();
+  const [subjects, setSubjects] = useState<{ id: string; name: string; icon: string | null }[]>([]);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      const { data: gradeData } = await supabase
+        .from("grades").select("id").eq("name", `Grade ${grade}`).single();
+      if (!gradeData) return;
+      const { data } = await supabase
+        .from("subjects").select("id, name, icon").eq("grade_id", gradeData.id);
+      setSubjects(data || []);
+    };
+    fetchSubjects();
+  }, [grade]);
 
   return (
     <PageTransition>
@@ -32,19 +38,22 @@ const Subjects = () => {
             <h1 className="text-3xl sm:text-4xl font-heading text-foreground mb-2">Grade {grade} Subjects</h1>
             <p className="text-muted-foreground mb-10">Select a subject to view study materials.</p>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {subjects.map((s, i) => (
-                <Link
-                  key={s.name}
-                  to={`/grades/${grade}/subjects/${encodeURIComponent(s.name)}`}
-                  className="group bg-card border border-border rounded-lg p-5 flex items-center gap-4 shadow-card hover:shadow-card-hover transition-all duration-300 hover:border-primary/40"
-                  style={{ animationDelay: `${i * 50}ms` }}
-                >
-                  <div className="w-11 h-11 rounded-md bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
-                    <s.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <span className="font-body font-medium text-foreground">{s.name}</span>
-                </Link>
-              ))}
+              {subjects.map((s, i) => {
+                const Icon = iconMap[s.icon || ""] || Icons.BookOpen;
+                return (
+                  <Link
+                    key={s.id}
+                    to={`/grades/${grade}/subjects/${encodeURIComponent(s.name)}`}
+                    className="group bg-card border border-border rounded-lg p-5 flex items-center gap-4 shadow-card hover:shadow-card-hover transition-all duration-300 hover:border-primary/40"
+                    style={{ animationDelay: `${i * 50}ms` }}
+                  >
+                    <div className="w-11 h-11 rounded-md bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors shrink-0">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <span className="font-body font-medium text-foreground">{s.name}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </main>
