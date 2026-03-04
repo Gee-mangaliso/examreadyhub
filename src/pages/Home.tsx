@@ -70,7 +70,16 @@ const Home = () => {
                     </Link>
                   </Button>
                   <Button asChild variant="outline" size="lg" className="border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10 text-base px-8">
-                    <Link to="/grades">
+                    <Link to={(() => {
+                      if (mySubjects.length === 0) return "/grades";
+                      const gradeId = mySubjects[0].subjects?.grade_id;
+                      const allSameGrade = mySubjects.every(s => s.subjects?.grade_id === gradeId);
+                      if (allSameGrade) {
+                        const num = getGradeNum(gradeId);
+                        return `/grades/${num}/subjects`;
+                      }
+                      return "/grades";
+                    })()}>
                       Browse Subjects
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
