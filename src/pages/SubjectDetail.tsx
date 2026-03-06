@@ -3,18 +3,21 @@ import { Lock, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList } fr
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
+import { useAuth } from "@/hooks/useAuth";
 
-const sections = [
+const getSections = (loggedIn: boolean) => [
   { id: "notes", label: "Notes", icon: FileText, locked: false },
   { id: "slides", label: "Slides", icon: Presentation, locked: false },
   { id: "examples", label: "Worked Examples", icon: Lightbulb, locked: false },
-  { id: "quizzes", label: "Quizzes", icon: HelpCircle, locked: true },
-  { id: "exams", label: "Practice Exams", icon: ClipboardList, locked: true },
+  { id: "quizzes", label: "Quizzes", icon: HelpCircle, locked: !loggedIn },
+  { id: "exams", label: "Practice Exams", icon: ClipboardList, locked: !loggedIn },
 ];
 
 const SubjectDetail = () => {
   const { grade, subject } = useParams();
+  const { user } = useAuth();
   const subjectName = decodeURIComponent(subject || "");
+  const sections = getSections(!!user);
 
   return (
     <PageTransition>
