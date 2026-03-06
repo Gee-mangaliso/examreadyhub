@@ -124,7 +124,7 @@ const Grades = () => {
                           return (
                             <Link
                               key={us.id}
-                              to={`/grades/${gradeNum}/subjects/${encodeURIComponent(us.subjects?.name || "")}`}
+                              to={`/subject-progress/${us.subject_id}`}
                               className="bg-card border border-border rounded-lg p-5 shadow-card hover:shadow-card-hover hover:border-primary/40 transition-all duration-300 block space-y-4"
                             >
                               {/* Subject header */}
