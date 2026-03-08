@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import {
   Lock, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList,
   BookOpen, Play, Loader2, Download, ExternalLink,
@@ -29,9 +29,11 @@ interface QuizQuestion { id: string; question: string; options: string[]; correc
 
 const SubjectDetail = () => {
   const { grade, subject } = useParams();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const subjectName = decodeURIComponent(subject || "");
   const sections = getSections(!!user);
+  const defaultTab = searchParams.get("tab") || "notes";
 
   const [subjectId, setSubjectId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -131,7 +133,7 @@ const SubjectDetail = () => {
             <h1 className="text-3xl sm:text-4xl font-heading text-foreground mb-1">{subjectName}</h1>
             <p className="text-muted-foreground mb-8">Grade {grade}</p>
 
-            <Tabs defaultValue="notes" className="w-full">
+            <Tabs defaultValue={defaultTab} className="w-full">
               <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-secondary p-1 rounded-lg">
                 {sections.map((s) => (
                   <TabsTrigger key={s.id} value={s.id} className="flex items-center gap-1.5 text-sm data-[state=active]:bg-card data-[state=active]:shadow-card">

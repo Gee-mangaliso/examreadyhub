@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Sparkles, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -13,6 +14,8 @@ interface RecentContent {
   subject_id?: string;
 }
 
+interface GradeInfo { id: string; name: string }
+
 const contentTypeIcons: Record<string, typeof FileText> = {
   note: FileText, slide: Presentation, worked_example: Lightbulb,
   quiz: HelpCircle, exam: ClipboardList,
@@ -23,18 +26,52 @@ const contentTypeLabels: Record<string, string> = {
   quiz: "Quiz", exam: "Practice Exam",
 };
 
-const RecentlyAddedContent = ({ mySubjects, onContentLoaded }: { mySubjects: UserSubject[]; onContentLoaded?: (items: any[]) => void }) => {
+// Map content type to the tab id on SubjectDetail page
+const contentTypeToTab: Record<string, string> = {
+  note: "notes", slide: "slides", worked_example: "examples",
+  quiz: "quizzes", exam: "exams",
+};
+
+const RecentlyAddedContent = ({
+  mySubjects,
+  grades,
+  onContentLoaded,
+}: {
+  mySubjects: UserSubject[];
+  grades: GradeInfo[];
+  onContentLoaded?: (items: any[]) => void;
+}) => {
   const [items, setItems] = useState<RecentContent[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Build lookup maps
+  const subjectGradeMap = mySubjects.reduce<Record<string, string>>((acc, s) => {
+    acc[s.subject_id] = s.subjects?.grade_id || "";
+    return acc;
+  }, {});
+  const subjectNameMap = mySubjects.reduce<Record<string, string>>((acc, s) => {
+    acc[s.subject_id] = s.subjects?.name || "Unknown";
+    return acc;
+  }, {});
+  const gradeNameMap = grades.reduce<Record<string, string>>((acc, g) => {
+    acc[g.id] = g.name;
+    return acc;
+  }, {});
+
+  const getLink = (item: RecentContent) => {
+    if (!item.subject_id) return "#";
+    const gradeId = subjectGradeMap[item.subject_id];
+    const gradeName = gradeNameMap[gradeId] || "";
+    const gradeNum = gradeName.replace("Grade ", "");
+    const subjectName = subjectNameMap[item.subject_id] || "";
+    const tab = contentTypeToTab[item.type] || "notes";
+    return `/grades/${gradeNum}/subjects/${encodeURIComponent(subjectName)}?tab=${tab}`;
+  };
 
   useEffect(() => {
     if (mySubjects.length === 0) { setLoading(false); return; }
 
     const subjectIds = mySubjects.map((s) => s.subject_id);
-    const subjectNameMap = mySubjects.reduce<Record<string, string>>((acc, s) => {
-      acc[s.subject_id] = s.subjects?.name || "Unknown";
-      return acc;
-    }, {});
 
     const fetchRecent = async () => {
       const [notesRes, slidesRes, examplesRes, quizzesRes] = await Promise.all([
@@ -85,7 +122,11 @@ const RecentlyAddedContent = ({ mySubjects, onContentLoaded }: { mySubjects: Use
         {items.map((item) => {
           const Icon = contentTypeIcons[item.type] || FileText;
           return (
-            <div key={`${item.type}-${item.id}`} className="bg-card border border-border rounded-lg p-4 shadow-card flex items-center gap-3 hover:border-primary/30 transition-colors">
+            <Link
+              key={`${item.type}-${item.id}`}
+              to={getLink(item)}
+              className="bg-card border border-border rounded-lg p-4 shadow-card flex items-center gap-3 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer"
+            >
               <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                 <Icon className="h-4 w-4 text-primary" />
               </div>
@@ -98,7 +139,7 @@ const RecentlyAddedContent = ({ mySubjects, onContentLoaded }: { mySubjects: Use
                 </div>
               </div>
               <span className="text-[10px] text-muted-foreground/60 shrink-0">{formatTimeAgo(item.created_at)}</span>
-            </div>
+            </Link>
           );
         })}
       </div>

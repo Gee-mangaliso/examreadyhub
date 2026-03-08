@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Trophy, ChevronDown, ChevronUp, CheckCircle, XCircle } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Trophy, ChevronDown, ChevronUp, CheckCircle, XCircle, ExternalLink } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -13,6 +13,8 @@ interface Attempt {
   completed_at: string;
   quiz_title: string;
   quiz_id: string;
+  subject_name: string;
+  grade_num: string;
 }
 
 interface QuestionDetail {
@@ -37,7 +39,7 @@ const QuizHistory = () => {
     const fetch = async () => {
       const { data } = await supabase
         .from("quiz_attempts")
-        .select("id, score, total_questions, answers, completed_at, quiz_id, quizzes(title)")
+        .select("id, score, total_questions, answers, completed_at, quiz_id, quizzes(title, type, subject_id, subjects(name, grade_id, grades(name)))")
         .eq("user_id", user.id)
         .order("completed_at", { ascending: false })
         .limit(20) as { data: any[] | null };
@@ -46,6 +48,8 @@ const QuizHistory = () => {
         (data || []).map((a: any) => ({
           ...a,
           quiz_title: a.quizzes?.title || "Quiz",
+          subject_name: a.quizzes?.subjects?.name || "",
+          grade_num: (a.quizzes?.subjects?.grades?.name || "").replace("Grade ", ""),
           answers: typeof a.answers === "object" ? a.answers : {},
         }))
       );
@@ -100,25 +104,40 @@ const QuizHistory = () => {
             const pct = a.total_questions > 0 ? Math.round((a.score / a.total_questions) * 100) : 0;
             const isExpanded = expandedId === a.id;
             const qs = questions[a.quiz_id] || [];
+            const subjectLink = a.grade_num && a.subject_name
+              ? `/grades/${a.grade_num}/subjects/${encodeURIComponent(a.subject_name)}?tab=quizzes`
+              : null;
             return (
               <div key={a.id} className="border border-border rounded-lg overflow-hidden">
-                <button
-                  onClick={() => toggleExpand(a)}
-                  className="flex items-center gap-3 p-3 w-full hover:bg-muted/50 transition-colors text-left"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{a.quiz_title}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-muted-foreground">{a.score}/{a.total_questions}</span>
-                      <Progress value={pct} className="h-1 w-16" />
-                      <span className="text-xs font-medium text-foreground">{pct}%</span>
+                <div className="flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors">
+                  <button
+                    onClick={() => toggleExpand(a)}
+                    className="flex-1 flex items-center gap-3 text-left min-w-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{a.quiz_title}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-muted-foreground">{a.score}/{a.total_questions}</span>
+                        <Progress value={pct} className="h-1 w-16" />
+                        <span className="text-xs font-medium text-foreground">{pct}%</span>
+                        {a.subject_name && <span className="text-[10px] text-muted-foreground">· {a.subject_name}</span>}
+                      </div>
                     </div>
-                  </div>
-                  <span className="text-[10px] text-muted-foreground/60 shrink-0">
-                    {new Date(a.completed_at).toLocaleDateString()}
-                  </span>
-                  {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                </button>
+                    <span className="text-[10px] text-muted-foreground/60 shrink-0">
+                      {new Date(a.completed_at).toLocaleDateString()}
+                    </span>
+                    {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  </button>
+                  {subjectLink && (
+                    <Link
+                      to={subjectLink}
+                      className="p-1.5 rounded-md hover:bg-primary/10 transition-colors shrink-0"
+                      title="Go to quiz"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5 text-primary" />
+                    </Link>
+                  )}
+                </div>
                 {isExpanded && (
                   <div className="border-t border-border p-3 bg-muted/30 space-y-3">
                     {loadingQuestions === a.id ? (
