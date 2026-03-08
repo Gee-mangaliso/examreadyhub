@@ -248,8 +248,10 @@ const Leaderboard = () => {
 
 // Reusable leaderboard table
 const LeaderboardTable = ({
-  entries, user, showWeekly,
-}: { entries: LeaderboardEntry[]; user: any; showWeekly: boolean }) => {
+  entries, user, showWeekly, allEntries,
+}: { entries: LeaderboardEntry[]; user: any; showWeekly: boolean; allEntries?: LeaderboardEntry[] }) => {
+  // Build a rank map from allEntries (full sorted list) so ranks are accurate
+  const rankSource = allEntries || entries;
   if (entries.length === 0) {
     return (
       <div className="bg-card border border-border rounded-lg p-12 text-center shadow-card">
