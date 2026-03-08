@@ -124,10 +124,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setProfile(null);
     setIsAdmin(false);
+    setBanInfo(null);
+    setRestrictions([]);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, isAdmin, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, isAdmin, loading, banInfo, restrictions, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
