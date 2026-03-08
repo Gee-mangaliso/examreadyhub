@@ -66,6 +66,7 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
 
   // Fetch papers for subject + province
   useEffect(() => {
+    if (!selectedProvince) { setPapers([]); setLoading(false); return; }
     const fetchPapers = async () => {
       setLoading(true);
       let query = supabase
