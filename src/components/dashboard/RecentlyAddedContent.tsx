@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Sparkles, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface UserSubject { id: string; subject_id: string; subjects: { id: string; name: string; icon: string | null; grade_id: string } }
 
@@ -26,7 +27,6 @@ const contentTypeLabels: Record<string, string> = {
   quiz: "Quiz", exam: "Practice Exam",
 };
 
-// Map content type to the tab id on SubjectDetail page
 const contentTypeToTab: Record<string, string> = {
   note: "notes", slide: "slides", worked_example: "examples",
   quiz: "quizzes", exam: "exams",
@@ -41,10 +41,12 @@ const RecentlyAddedContent = ({
   grades: GradeInfo[];
   onContentLoaded?: (items: any[]) => void;
 }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [items, setItems] = useState<RecentContent[]>([]);
+  const [viewedIds, setViewedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  // Build lookup maps
   const subjectGradeMap = mySubjects.reduce<Record<string, string>>((acc, s) => {
     acc[s.subject_id] = s.subjects?.grade_id || "";
     return acc;
@@ -67,6 +69,21 @@ const RecentlyAddedContent = ({
     const tab = contentTypeToTab[item.type] || "notes";
     return `/grades/${gradeNum}/subjects/${encodeURIComponent(subjectName)}?tab=${tab}`;
   };
+
+  // Fetch viewed content ids
+  useEffect(() => {
+    if (!user) return;
+    const fetchViewed = async () => {
+      const { data } = await supabase
+        .from("content_views")
+        .select("content_id, content_type")
+        .eq("user_id", user.id);
+      if (data) {
+        setViewedIds(new Set(data.map((v: any) => `${v.content_type}-${v.content_id}`)));
+      }
+    };
+    fetchViewed();
+  }, [user]);
 
   useEffect(() => {
     if (mySubjects.length === 0) { setLoading(false); return; }
@@ -98,8 +115,23 @@ const RecentlyAddedContent = ({
     fetchRecent();
   }, [mySubjects]);
 
+  const handleClick = async (item: RecentContent) => {
+    if (!user) return;
+    const key = `${item.type}-${item.id}`;
+    // Optimistically remove
+    setViewedIds((prev) => new Set(prev).add(key));
+    // Record view in DB
+    await supabase.from("content_views").upsert(
+      { user_id: user.id, content_id: item.id, content_type: item.type },
+      { onConflict: "user_id,content_id,content_type" }
+    );
+    navigate(getLink(item));
+  };
+
   if (loading) return null;
-  if (items.length === 0) return null;
+
+  const visibleItems = items.filter((item) => !viewedIds.has(`${item.type}-${item.id}`));
+  if (visibleItems.length === 0) return null;
 
   const formatTimeAgo = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -119,13 +151,13 @@ const RecentlyAddedContent = ({
         <Sparkles className="h-5 w-5 text-primary" /> Recently Added
       </h2>
       <div className="grid sm:grid-cols-2 gap-3">
-        {items.map((item) => {
+        {visibleItems.map((item) => {
           const Icon = contentTypeIcons[item.type] || FileText;
           return (
-            <Link
+            <button
               key={`${item.type}-${item.id}`}
-              to={getLink(item)}
-              className="bg-card border border-border rounded-lg p-4 shadow-card flex items-center gap-3 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer"
+              onClick={() => handleClick(item)}
+              className="bg-card border border-border rounded-lg p-4 shadow-card flex items-center gap-3 hover:border-primary/30 hover:shadow-md transition-all cursor-pointer text-left w-full"
             >
               <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                 <Icon className="h-4 w-4 text-primary" />
@@ -139,7 +171,7 @@ const RecentlyAddedContent = ({
                 </div>
               </div>
               <span className="text-[10px] text-muted-foreground/60 shrink-0">{formatTimeAgo(item.created_at)}</span>
-            </Link>
+            </button>
           );
         })}
       </div>
