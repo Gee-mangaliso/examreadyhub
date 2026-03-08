@@ -1,7 +1,11 @@
-import { useState, useEffect } from "react";
-import { History, CheckCircle2, Circle, RefreshCw } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { History, CheckCircle2, Circle, RefreshCw, Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -24,6 +28,9 @@ interface Suggestion {
 const SuggestionHistory = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const fetchSuggestions = async () => {
     setLoading(true);
@@ -31,10 +38,9 @@ const SuggestionHistory = () => {
       .from("admin_suggestions")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(200);
 
     if (data) {
-      // Fetch student names
       const userIds = [...new Set(data.map((s) => s.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
@@ -55,8 +61,6 @@ const SuggestionHistory = () => {
 
   useEffect(() => {
     fetchSuggestions();
-
-    // Realtime subscription for new suggestions
     const channel = supabase
       .channel("admin-suggestions-realtime")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "admin_suggestions" }, () => {
@@ -67,9 +71,24 @@ const SuggestionHistory = () => {
         fetchSuggestions();
       })
       .subscribe();
-
     return () => { supabase.removeChannel(channel); };
   }, []);
+
+  const filtered = useMemo(() => {
+    return suggestions.filter((s) => {
+      const matchesSearch =
+        !search ||
+        (s.student_name || "").toLowerCase().includes(search.toLowerCase()) ||
+        s.content_title.toLowerCase().includes(search.toLowerCase()) ||
+        (s.subject_name || "").toLowerCase().includes(search.toLowerCase());
+      const matchesType = typeFilter === "all" || s.content_type === typeFilter;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "read" && s.read) ||
+        (statusFilter === "unread" && !s.read);
+      return matchesSearch && matchesType && matchesStatus;
+    });
+  }, [suggestions, search, typeFilter, statusFilter]);
 
   const typeColors: Record<string, string> = {
     note: "bg-blue-500/10 text-blue-600 border-blue-200",
@@ -79,23 +98,76 @@ const SuggestionHistory = () => {
     exam: "bg-red-500/10 text-red-600 border-red-200",
   };
 
+  const readCount = suggestions.filter((s) => s.read).length;
+  const unreadCount = suggestions.filter((s) => !s.read).length;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <History className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-heading text-foreground">Sent Suggestions History</h2>
+          <Badge variant="secondary" className="ml-2">{suggestions.length} total</Badge>
         </div>
         <Button variant="outline" size="sm" onClick={fetchSuggestions} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
         </Button>
       </div>
 
+      {/* Stats */}
+      <div className="flex gap-3">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <CheckCircle2 className="h-3.5 w-3.5 text-green-500" /> {readCount} read
+        </div>
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Circle className="h-3.5 w-3.5 text-muted-foreground" /> {unreadCount} unread
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by student, content, or subject…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-full sm:w-[160px]">
+            <Filter className="h-4 w-4 mr-1.5 text-muted-foreground" />
+            <SelectValue placeholder="Content type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="note">Note</SelectItem>
+            <SelectItem value="slide">Slide</SelectItem>
+            <SelectItem value="worked_example">Worked Example</SelectItem>
+            <SelectItem value="quiz">Quiz</SelectItem>
+            <SelectItem value="exam">Practice Exam</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[140px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="read">Read</SelectItem>
+            <SelectItem value="unread">Unread</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-muted-foreground">Loading history…</div>
-        ) : suggestions.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No suggestions sent yet.</div>
+        ) : filtered.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">
+            {suggestions.length === 0 ? "No suggestions sent yet." : "No suggestions match your filters."}
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -110,7 +182,7 @@ const SuggestionHistory = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {suggestions.map((s) => (
+              {filtered.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium text-foreground">{s.student_name}</TableCell>
                   <TableCell className="text-foreground max-w-[200px] truncate">{s.content_title}</TableCell>
