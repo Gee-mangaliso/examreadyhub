@@ -15,12 +15,13 @@ const Header = () => {
 
   const navLinks = [
     { to: "/", label: "Home" },
-    { to: "/grades", label: "Grades" },
     ...(user ? [
       { to: "/leaderboard", label: "Leaderboard" },
       { to: "/dashboard", label: "Dashboard" },
       { to: "/profile", label: "Profile" },
-    ] : []),
+    ] : [
+      { to: "/grades", label: "Grades" },
+    ]),
     ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
   ];
 
