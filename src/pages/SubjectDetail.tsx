@@ -133,7 +133,7 @@ const SubjectDetail = () => {
             <h1 className="text-3xl sm:text-4xl font-heading text-foreground mb-1">{subjectName}</h1>
             <p className="text-muted-foreground mb-8">Grade {grade}</p>
 
-            <Tabs defaultValue="notes" className="w-full">
+            <Tabs defaultValue={defaultTab} className="w-full">
               <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-secondary p-1 rounded-lg">
                 {sections.map((s) => (
                   <TabsTrigger key={s.id} value={s.id} className="flex items-center gap-1.5 text-sm data-[state=active]:bg-card data-[state=active]:shadow-card">
