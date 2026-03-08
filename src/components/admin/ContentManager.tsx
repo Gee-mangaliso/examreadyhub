@@ -259,6 +259,7 @@ const SubjectContentEditor = ({ subjectId }: { subjectId: string }) => {
         <TabsTrigger value="notes" className="flex items-center gap-1.5 text-sm"><FileText className="h-4 w-4" />Notes</TabsTrigger>
         <TabsTrigger value="slides" className="flex items-center gap-1.5 text-sm"><Presentation className="h-4 w-4" />Slides</TabsTrigger>
         <TabsTrigger value="examples" className="flex items-center gap-1.5 text-sm"><Lightbulb className="h-4 w-4" />Examples</TabsTrigger>
+        <TabsTrigger value="study-guides" className="flex items-center gap-1.5 text-sm"><BookOpen className="h-4 w-4" />Study Guides</TabsTrigger>
         <TabsTrigger value="quizzes" className="flex items-center gap-1.5 text-sm"><HelpCircle className="h-4 w-4" />Quizzes</TabsTrigger>
         <TabsTrigger value="exams" className="flex items-center gap-1.5 text-sm"><ClipboardList className="h-4 w-4" />Exams</TabsTrigger>
         <TabsTrigger value="exam-papers" className="flex items-center gap-1.5 text-sm"><Upload className="h-4 w-4" />Exam Papers</TabsTrigger>
@@ -272,6 +273,9 @@ const SubjectContentEditor = ({ subjectId }: { subjectId: string }) => {
       </TabsContent>
       <TabsContent value="examples" className="mt-4">
         <ExamplesEditor subjectId={subjectId} />
+      </TabsContent>
+      <TabsContent value="study-guides" className="mt-4">
+        <StudyGuidesEditor subjectId={subjectId} />
       </TabsContent>
       <TabsContent value="quizzes" className="mt-4">
         <QuizContentEditor subjectId={subjectId} type="quiz" />
