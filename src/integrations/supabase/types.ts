@@ -325,6 +325,30 @@ export type Database = {
           },
         ]
       }
+      search_history: {
+        Row: {
+          created_at: string
+          id: string
+          query: string
+          result_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          query: string
+          result_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          query?: string
+          result_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       slides: {
         Row: {
           content: string | null
