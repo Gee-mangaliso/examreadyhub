@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Sparkles, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList, Check } from "lucide-react";
+import { Sparkles, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList, Check, MessageSquare, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { playNotification } from "@/lib/sounds";
+import { playNotification, playSend } from "@/lib/sounds";
 
 interface Suggestion {
   id: string;
