@@ -134,7 +134,7 @@ const Dashboard = () => {
             <StudyStreak />
 
             {/* Search */}
-            <DashboardSearch subjects={searchSubjects} contentItems={searchContent} />
+            <DashboardSearch subjects={searchSubjects} contentItems={searchContent} enrolledSubjectIds={mySubjects.map(s => s.subject_id)} grades={grades} />
 
             {/* My Subjects */}
             <div className="flex items-center justify-between mb-6">
