@@ -107,6 +107,85 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_completions: {
+        Row: {
+          completed_at: string
+          exam_paper_id: string
+          id: string
+          score: number
+          total_marks: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          exam_paper_id: string
+          id?: string
+          score?: number
+          total_marks?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          exam_paper_id?: string
+          id?: string
+          score?: number
+          total_marks?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_completions_exam_paper_id_fkey"
+            columns: ["exam_paper_id"]
+            isOneToOne: false
+            referencedRelation: "exam_papers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_papers: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          id: string
+          province: string
+          subject_id: string
+          term: string
+          title: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          province: string
+          subject_id: string
+          term: string
+          title: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          province?: string
+          subject_id?: string
+          term?: string
+          title?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_papers_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grades: {
         Row: {
           created_at: string
@@ -172,6 +251,47 @@ export type Database = {
           weekly_quizzes?: number
         }
         Relationships: []
+      }
+      memo_requests: {
+        Row: {
+          admin_note: string | null
+          created_at: string
+          exam_paper_id: string
+          id: string
+          memo_url: string | null
+          responded_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          created_at?: string
+          exam_paper_id: string
+          id?: string
+          memo_url?: string | null
+          responded_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          created_at?: string
+          exam_paper_id?: string
+          id?: string
+          memo_url?: string | null
+          responded_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memo_requests_exam_paper_id_fkey"
+            columns: ["exam_paper_id"]
+            isOneToOne: false
+            referencedRelation: "exam_papers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notes: {
         Row: {
