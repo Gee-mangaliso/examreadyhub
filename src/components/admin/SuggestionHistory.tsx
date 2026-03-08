@@ -23,6 +23,8 @@ interface Suggestion {
   read: boolean;
   created_at: string;
   student_name?: string;
+  reply: string | null;
+  replied_at: string | null;
 }
 
 const SuggestionHistory = () => {
