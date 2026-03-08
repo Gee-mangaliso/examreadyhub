@@ -33,10 +33,21 @@ const Header = () => {
   return (
     <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-6xl mx-auto flex items-center justify-between px-4 h-16">
-        <Link to="/" className="flex items-center gap-2 text-foreground font-heading text-xl">
-          <GraduationCap className="h-6 w-6 text-primary" />
-          ExamReady Hub
-        </Link>
+        <div className="flex items-center gap-2">
+          {location.pathname !== "/" && (
+            <button
+              onClick={() => navigate(-1)}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          )}
+          <Link to="/" className="flex items-center gap-2 text-foreground font-heading text-xl">
+            <GraduationCap className="h-6 w-6 text-primary" />
+            ExamReady Hub
+          </Link>
+        </div>
 
         {/* Desktop */}
         <nav className="hidden md:flex items-center gap-6">

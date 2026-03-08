@@ -296,10 +296,7 @@ const Home = () => {
         {/* Contact / Feedback Section */}
         <ContactSection user={user} />
 
-        {/* Footer */}
-        <footer className="border-t border-border py-8 px-4 text-center text-sm text-muted-foreground">
-          © 2026 ExamReady Hub. All rights reserved.
-        </footer>
+        <Footer />
       </div>
     </PageTransition>
   );
