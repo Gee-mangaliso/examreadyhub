@@ -99,6 +99,12 @@ const Home = () => {
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
+                  <Button asChild variant="ghost" size="sm" className="text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/10 text-sm">
+                    <Link to="/login">
+                      <GraduationCap className="mr-1.5 h-4 w-4" />
+                      Admin Login
+                    </Link>
+                  </Button>
                 </>
               )}
             </div>
