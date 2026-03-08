@@ -29,9 +29,11 @@ interface QuizQuestion { id: string; question: string; options: string[]; correc
 
 const SubjectDetail = () => {
   const { grade, subject } = useParams();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const subjectName = decodeURIComponent(subject || "");
   const sections = getSections(!!user);
+  const defaultTab = searchParams.get("tab") || "notes";
 
   const [subjectId, setSubjectId] = useState<string | null>(null);
   const [notes, setNotes] = useState<Note[]>([]);
