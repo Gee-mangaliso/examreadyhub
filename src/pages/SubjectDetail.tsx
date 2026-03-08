@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 import {
   Lock, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList,
-  BookOpen, Play, Loader2, Download, ExternalLink,
+  BookOpen, Play, Loader2, Download, ExternalLink, BookMarked, GraduationCap,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ const getSections = (loggedIn: boolean) => [
   { id: "notes", label: "Notes", icon: FileText, locked: false },
   { id: "slides", label: "Slides", icon: Presentation, locked: false },
   { id: "examples", label: "Worked Examples", icon: Lightbulb, locked: false },
+  { id: "textbooks", label: "Textbooks", icon: BookMarked, locked: false },
+  { id: "study-guides", label: "Study Guides", icon: GraduationCap, locked: false },
   { id: "quizzes", label: "Quizzes", icon: HelpCircle, locked: !loggedIn },
   { id: "exams", label: "Practice Exams", icon: ClipboardList, locked: !loggedIn },
 ];
@@ -24,6 +26,8 @@ const getSections = (loggedIn: boolean) => [
 interface Note { id: string; title: string; content: string | null; sort_order: number }
 interface Slide { id: string; title: string; content: string | null; file_url: string | null; sort_order: number }
 interface WorkedExample { id: string; title: string; content: string | null; file_url: string | null; sort_order: number }
+interface Textbook { id: string; title: string; description: string | null; file_url: string | null; sort_order: number }
+interface StudyGuide { id: string; title: string; content: string | null; file_url: string | null; sort_order: number }
 interface Quiz { id: string; title: string; description: string | null; time_limit_minutes: number | null; type: string }
 interface QuizQuestion { id: string; question: string; options: string[]; correct_answer: string; explanation: string | null; sort_order: number }
 
@@ -39,6 +43,8 @@ const SubjectDetail = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [examples, setExamples] = useState<WorkedExample[]>([]);
+  const [textbooks, setTextbooks] = useState<Textbook[]>([]);
+  const [studyGuides, setStudyGuides] = useState<StudyGuide[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [exams, setExams] = useState<Quiz[]>([]);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
@@ -61,16 +67,20 @@ const SubjectDetail = () => {
   useEffect(() => {
     if (!subjectId) return;
     const fetchContent = async () => {
-      const [notesRes, slidesRes, examplesRes, quizzesRes, examsRes] = await Promise.all([
+      const [notesRes, slidesRes, examplesRes, textbooksRes, guidesRes, quizzesRes, examsRes] = await Promise.all([
         supabase.from("notes").select("*").eq("subject_id", subjectId).order("sort_order"),
         supabase.from("slides").select("*").eq("subject_id", subjectId).order("sort_order"),
         supabase.from("worked_examples").select("*").eq("subject_id", subjectId).order("sort_order"),
+        supabase.from("textbooks").select("*").eq("subject_id", subjectId).order("sort_order"),
+        supabase.from("study_guides").select("*").eq("subject_id", subjectId).order("sort_order"),
         supabase.from("quizzes").select("*").eq("subject_id", subjectId).eq("type", "quiz").order("created_at"),
         supabase.from("quizzes").select("*").eq("subject_id", subjectId).eq("type", "exam").order("created_at"),
       ]);
       if (notesRes.data) setNotes(notesRes.data);
       if (slidesRes.data) setSlides(slidesRes.data);
       if (examplesRes.data) setExamples(examplesRes.data);
+      if (textbooksRes.data) setTextbooks(textbooksRes.data as any);
+      if (guidesRes.data) setStudyGuides(guidesRes.data as any);
       if (quizzesRes.data) setQuizzes(quizzesRes.data);
       if (examsRes.data) setExams(examsRes.data);
     };
@@ -231,6 +241,70 @@ const SubjectDetail = () => {
                   </div>
                 ) : (
                   <EmptyContent icon={Lightbulb} message="No worked examples available yet." />
+                )}
+              </TabsContent>
+
+              {/* TEXTBOOKS */}
+              <TabsContent value="textbooks" className="mt-6">
+                {textbooks.length > 0 ? (
+                  <div className="space-y-4">
+                    {textbooks.map((tb) => (
+                      <div key={tb.id} className="bg-card border border-border rounded-lg p-6 shadow-card">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <BookMarked className="h-5 w-5 text-primary shrink-0" />
+                            <div>
+                              <h3 className="font-medium text-foreground">{tb.title}</h3>
+                              {tb.description && <p className="text-sm text-muted-foreground mt-1">{tb.description}</p>}
+                            </div>
+                          </div>
+                          {tb.file_url && (
+                            <Button asChild size="sm" variant="outline">
+                              <a href={tb.file_url} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4 mr-1" /> Download
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyContent icon={BookMarked} message="No textbooks available yet." />
+                )}
+              </TabsContent>
+
+              {/* STUDY GUIDES */}
+              <TabsContent value="study-guides" className="mt-6">
+                {studyGuides.length > 0 ? (
+                  <div className="space-y-4">
+                    {studyGuides.map((guide) => (
+                      <div key={guide.id} className="bg-card border border-border rounded-lg shadow-card overflow-hidden">
+                        <div className="px-6 py-4 flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <GraduationCap className="h-5 w-5 text-primary shrink-0" />
+                            <div>
+                              <h3 className="font-medium text-foreground">{guide.title}</h3>
+                              {guide.content && (
+                                <div className="mt-3 prose prose-sm max-w-none text-foreground">
+                                  {renderMarkdown(guide.content)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {guide.file_url && (
+                            <Button asChild size="sm" variant="outline" className="shrink-0">
+                              <a href={guide.file_url} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4 mr-1" /> Download
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyContent icon={GraduationCap} message="No study guides available yet." />
                 )}
               </TabsContent>
 

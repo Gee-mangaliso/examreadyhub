@@ -456,6 +456,47 @@ export type Database = {
           },
         ]
       }
+      study_guides: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          sort_order: number
+          subject_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          sort_order?: number
+          subject_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          sort_order?: number
+          subject_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_guides_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_progress: {
         Row: {
           created_at: string
@@ -528,6 +569,47 @@ export type Database = {
             columns: ["grade_id"]
             isOneToOne: false
             referencedRelation: "grades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      textbooks: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_url: string | null
+          id: string
+          sort_order: number
+          subject_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          sort_order?: number
+          subject_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_url?: string | null
+          id?: string
+          sort_order?: number
+          subject_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "textbooks_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
             referencedColumns: ["id"]
           },
         ]
