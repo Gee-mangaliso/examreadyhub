@@ -834,6 +834,7 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ title: "", province: "", term: "", year: "2025" });
   const [file, setFile] = useState<File | null>(null);
+  const [urlOverride, setUrlOverride] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
