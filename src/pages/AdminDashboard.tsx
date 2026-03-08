@@ -18,6 +18,7 @@ import PageTransition from "@/components/PageTransition";
 import ContentManager from "@/components/admin/ContentManager";
 import BadgeManager from "@/components/admin/BadgeManager";
 import SuggestionManager from "@/components/admin/SuggestionManager";
+import SearchAnalytics from "@/components/admin/SearchAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
