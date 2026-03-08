@@ -726,6 +726,39 @@ export type Database = {
           },
         ]
       }
+      testimonials: {
+        Row: {
+          approved: boolean
+          created_at: string
+          full_name: string
+          grade: string | null
+          id: string
+          quote: string
+          stars: number
+          user_id: string
+        }
+        Insert: {
+          approved?: boolean
+          created_at?: string
+          full_name: string
+          grade?: string | null
+          id?: string
+          quote: string
+          stars?: number
+          user_id: string
+        }
+        Update: {
+          approved?: boolean
+          created_at?: string
+          full_name?: string
+          grade?: string | null
+          id?: string
+          quote?: string
+          stars?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       textbooks: {
         Row: {
           created_at: string
