@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { AlertTriangle, Clock, FileText, Maximize2, Send, X } from "lucide-react";
+import { AlertTriangle, Clock, FileText, Loader2, Maximize2, Send, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
