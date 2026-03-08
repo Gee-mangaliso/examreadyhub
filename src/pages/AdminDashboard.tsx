@@ -21,6 +21,8 @@ import SuggestionManager from "@/components/admin/SuggestionManager";
 import SuggestionHistory from "@/components/admin/SuggestionHistory";
 import SearchAnalytics from "@/components/admin/SearchAnalytics";
 import MemoRequestManager from "@/components/admin/MemoRequestManager";
+import FeedbackManager from "@/components/admin/FeedbackManager";
+import TestimonialManager from "@/components/admin/TestimonialManager";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
