@@ -60,7 +60,7 @@ const getInitials = (name: string) =>
   name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
 
 const Leaderboard = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [recentBadges, setRecentBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,8 +79,24 @@ const Leaderboard = () => {
   }, []);
 
   const userRank = user ? entries.findIndex((e) => e.user_id === user.id) + 1 : 0;
-  const topEngaged = [...entries].sort((a, b) => b.weekly_quizzes - a.weekly_quizzes).slice(0, 10);
-  const consistentLearners = [...entries].filter((e) => e.current_streak >= 2).sort((a, b) => b.current_streak - a.current_streak);
+
+  // For learners: show top 3 + current user; for admins: show all
+  const filterForLearner = (list: LeaderboardEntry[]) => {
+    if (isAdmin) return list;
+    const top3 = list.slice(0, 3);
+    const currentUser = user ? list.find((e) => e.user_id === user.id) : null;
+    if (currentUser && !top3.some((e) => e.user_id === currentUser.user_id)) {
+      return [...top3, currentUser];
+    }
+    return top3;
+  };
+
+  const topEngaged = filterForLearner([...entries].sort((a, b) => b.weekly_quizzes - a.weekly_quizzes));
+  const consistentLearners = (() => {
+    const all = [...entries].filter((e) => e.current_streak >= 2).sort((a, b) => b.current_streak - a.current_streak);
+    return isAdmin ? all : filterForLearner(all);
+  })();
+  const overallEntries = filterForLearner(entries);
 
   return (
     <PageTransition>
