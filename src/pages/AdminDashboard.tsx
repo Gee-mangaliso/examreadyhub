@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Users, BarChart3, TrendingUp, Activity, Eye, Search,
-  ChevronLeft, GraduationCap, Clock, Award, BookOpen
+  ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -15,41 +15,23 @@ import {
 } from "@/components/ui/table";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
-import QuizManager from "@/components/admin/QuizManager";
+import ContentManager from "@/components/admin/ContentManager";
+import BadgeManager from "@/components/admin/BadgeManager";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
-  user_id: string;
-  full_name: string;
-  email: string;
-  avatar_url: string | null;
-  grade: string | null;
-  created_at: string;
-  total_quizzes_taken: number;
-  total_score: number;
-  total_questions: number;
-  avg_percentage: number;
-  last_quiz_at: string | null;
-  subjects_enrolled: number;
+  user_id: string; full_name: string; email: string; avatar_url: string | null;
+  grade: string | null; created_at: string; total_quizzes_taken: number;
+  total_score: number; total_questions: number; avg_percentage: number;
+  last_quiz_at: string | null; subjects_enrolled: number;
 }
-
 interface PlatformStats {
-  total_students: number;
-  total_quiz_attempts: number;
-  avg_score: number;
-  active_today: number;
-  active_this_week: number;
+  total_students: number; total_quiz_attempts: number; avg_score: number;
+  active_today: number; active_this_week: number;
 }
-
 interface StudentAttempt {
-  attempt_id: string;
-  quiz_title: string;
-  subject_name: string;
-  grade_name: string;
-  score: number;
-  total_questions: number;
-  percentage: number;
-  completed_at: string;
+  attempt_id: string; quiz_title: string; subject_name: string; grade_name: string;
+  score: number; total_questions: number; percentage: number; completed_at: string;
 }
 
 const getInitials = (name: string) =>
@@ -58,9 +40,7 @@ const getInitials = (name: string) =>
 const StatCard = ({ icon: Icon, label, value, sub }: { icon: any; label: string; value: string | number; sub?: string }) => (
   <div className="bg-card border border-border rounded-lg p-5 shadow-card">
     <div className="flex items-center gap-3 mb-2">
-      <div className="p-2 rounded-lg bg-primary/10">
-        <Icon className="h-5 w-5 text-primary" />
-      </div>
+      <div className="p-2 rounded-lg bg-primary/10"><Icon className="h-5 w-5 text-primary" /></div>
       <span className="text-sm text-muted-foreground">{label}</span>
     </div>
     <div className="text-2xl font-bold text-foreground">{value}</div>
@@ -84,9 +64,8 @@ const AdminDashboard = () => {
         supabase.rpc("admin_get_platform_stats"),
       ]);
       if (studentsRes.data) setStudents(studentsRes.data as Student[]);
-      if (statsRes.data && (statsRes.data as PlatformStats[]).length > 0) {
+      if (statsRes.data && (statsRes.data as PlatformStats[]).length > 0)
         setStats((statsRes.data as PlatformStats[])[0]);
-      }
       setLoading(false);
     };
     fetchData();
@@ -95,9 +74,7 @@ const AdminDashboard = () => {
   const viewStudent = async (student: Student) => {
     setSelectedStudent(student);
     setAttemptsLoading(true);
-    const { data } = await supabase.rpc("admin_get_student_attempts", {
-      _student_id: student.user_id,
-    });
+    const { data } = await supabase.rpc("admin_get_student_attempts", { _student_id: student.user_id });
     if (data) setAttempts(data as StudentAttempt[]);
     setAttemptsLoading(false);
   };
@@ -122,7 +99,6 @@ const AdminDashboard = () => {
     );
   }
 
-  // Student detail view
   if (selectedStudent) {
     return (
       <PageTransition>
@@ -130,55 +106,33 @@ const AdminDashboard = () => {
           <Header />
           <main className="flex-1 py-16 px-4">
             <div className="max-w-5xl mx-auto">
-              <Button
-                variant="ghost"
-                onClick={() => { setSelectedStudent(null); setAttempts([]); }}
-                className="mb-6 text-muted-foreground hover:text-foreground"
-              >
+              <Button variant="ghost" onClick={() => { setSelectedStudent(null); setAttempts([]); }} className="mb-6 text-muted-foreground hover:text-foreground">
                 <ChevronLeft className="h-4 w-4 mr-1" /> Back to Students
               </Button>
-
-              {/* Student header */}
               <div className="bg-card border border-border rounded-lg p-6 shadow-card mb-6">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
                     <AvatarImage src={selectedStudent.avatar_url || undefined} />
-                    <AvatarFallback className="text-lg bg-primary/10 text-primary">
-                      {getInitials(selectedStudent.full_name)}
-                    </AvatarFallback>
+                    <AvatarFallback className="text-lg bg-primary/10 text-primary">{getInitials(selectedStudent.full_name)}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <h2 className="text-2xl font-heading text-foreground">{selectedStudent.full_name}</h2>
                     <p className="text-muted-foreground">{selectedStudent.email}</p>
                     <div className="flex gap-3 mt-2">
-                      {selectedStudent.grade && (
-                        <Badge variant="secondary">
-                          <GraduationCap className="h-3 w-3 mr-1" />
-                          {selectedStudent.grade}
-                        </Badge>
-                      )}
-                      <Badge variant="outline">
-                        <Clock className="h-3 w-3 mr-1" />
-                        Joined {format(new Date(selectedStudent.created_at), "MMM d, yyyy")}
-                      </Badge>
+                      {selectedStudent.grade && <Badge variant="secondary"><GraduationCap className="h-3 w-3 mr-1" />{selectedStudent.grade}</Badge>}
+                      <Badge variant="outline"><Clock className="h-3 w-3 mr-1" />Joined {format(new Date(selectedStudent.created_at), "MMM d, yyyy")}</Badge>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* Student stats */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <StatCard icon={BarChart3} label="Quizzes Taken" value={selectedStudent.total_quizzes_taken} />
                 <StatCard icon={Award} label="Total Score" value={`${selectedStudent.total_score}/${selectedStudent.total_questions}`} />
                 <StatCard icon={TrendingUp} label="Avg Score" value={`${selectedStudent.avg_percentage}%`} />
                 <StatCard icon={BookOpen} label="Subjects" value={selectedStudent.subjects_enrolled} />
               </div>
-
-              {/* Quiz attempts table */}
               <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden">
-                <div className="px-6 py-4 border-b border-border">
-                  <h3 className="font-heading text-lg text-foreground">Quiz History</h3>
-                </div>
+                <div className="px-6 py-4 border-b border-border"><h3 className="font-heading text-lg text-foreground">Quiz History</h3></div>
                 {attemptsLoading ? (
                   <div className="p-8 text-center text-muted-foreground">Loading attempts…</div>
                 ) : attempts.length === 0 ? (
@@ -187,12 +141,8 @@ const AdminDashboard = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Quiz</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Grade</TableHead>
-                        <TableHead className="text-center">Score</TableHead>
-                        <TableHead className="text-center">%</TableHead>
-                        <TableHead>Date</TableHead>
+                        <TableHead>Quiz</TableHead><TableHead>Subject</TableHead><TableHead>Grade</TableHead>
+                        <TableHead className="text-center">Score</TableHead><TableHead className="text-center">%</TableHead><TableHead>Date</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -208,9 +158,7 @@ const AdminDashboard = () => {
                               <Progress value={a.percentage} className="h-1.5 w-16" />
                             </div>
                           </TableCell>
-                          <TableCell className="text-muted-foreground text-sm">
-                            {format(new Date(a.completed_at), "MMM d, yyyy HH:mm")}
-                          </TableCell>
+                          <TableCell className="text-muted-foreground text-sm">{format(new Date(a.completed_at), "MMM d, yyyy HH:mm")}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -224,7 +172,6 @@ const AdminDashboard = () => {
     );
   }
 
-  // Main students list
   return (
     <PageTransition>
       <div className="min-h-screen flex flex-col bg-background">
@@ -232,109 +179,92 @@ const AdminDashboard = () => {
         <main className="flex-1 py-16 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-             <h1 className="text-3xl sm:text-4xl font-heading text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Monitor student participation and manage content</p>
+              <h1 className="text-3xl sm:text-4xl font-heading text-foreground">Admin Dashboard</h1>
+              <p className="text-muted-foreground mt-1">Manage content, students, and badges</p>
             </div>
 
-            <Tabs defaultValue="students" className="space-y-6">
-              <TabsList>
-                <TabsTrigger value="students">Students</TabsTrigger>
-                <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
+            <Tabs defaultValue="content" className="space-y-6">
+              <TabsList className="flex flex-wrap h-auto gap-1">
+                <TabsTrigger value="content" className="gap-1.5"><FolderOpen className="h-4 w-4" />Content</TabsTrigger>
+                <TabsTrigger value="students" className="gap-1.5"><Users className="h-4 w-4" />Students</TabsTrigger>
+                <TabsTrigger value="badges" className="gap-1.5"><Award className="h-4 w-4" />Badges</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="students" className="space-y-6">
-
-            {/* Platform stats */}
-            {stats && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-                <StatCard icon={Users} label="Total Students" value={stats.total_students} />
-                <StatCard icon={BarChart3} label="Quiz Attempts" value={stats.total_quiz_attempts} />
-                <StatCard icon={TrendingUp} label="Avg Score" value={`${stats.avg_score ?? 0}%`} />
-                <StatCard icon={Activity} label="Active Today" value={stats.active_today} />
-                <StatCard icon={Activity} label="Active This Week" value={stats.active_this_week} />
-              </div>
-            )}
-
-            {/* Search */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search students by name, email, or grade…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* Students table */}
-            <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden">
-              {filtered.length === 0 ? (
-                <div className="p-8 text-center text-muted-foreground">
-                  {students.length === 0 ? "No students registered yet." : "No students match your search."}
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Student</TableHead>
-                      <TableHead>Grade</TableHead>
-                      <TableHead className="text-center">Quizzes</TableHead>
-                      <TableHead className="text-center">Avg %</TableHead>
-                      <TableHead>Last Active</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((student) => (
-                      <TableRow key={student.user_id}>
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
-                              <AvatarImage src={student.avatar_url || undefined} />
-                              <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                                {getInitials(student.full_name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="font-medium text-foreground">{student.full_name}</div>
-                              <div className="text-xs text-muted-foreground">{student.email}</div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {student.grade ? (
-                            <Badge variant="secondary" className="text-xs">{student.grade}</Badge>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center text-foreground">{student.total_quizzes_taken}</TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <span className="text-foreground font-medium">{student.avg_percentage}%</span>
-                            <Progress value={student.avg_percentage} className="h-1.5 w-12" />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {student.last_quiz_at
-                            ? format(new Date(student.last_quiz_at), "MMM d, yyyy")
-                            : "Never"}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button size="sm" variant="outline" onClick={() => viewStudent(student)}>
-                            <Eye className="h-4 w-4 mr-1" /> View
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </div>
+              <TabsContent value="content">
+                <ContentManager />
               </TabsContent>
 
-              <TabsContent value="quizzes">
-                <QuizManager />
+              <TabsContent value="students" className="space-y-6">
+                {stats && (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+                    <StatCard icon={Users} label="Total Students" value={stats.total_students} />
+                    <StatCard icon={BarChart3} label="Quiz Attempts" value={stats.total_quiz_attempts} />
+                    <StatCard icon={TrendingUp} label="Avg Score" value={`${stats.avg_score ?? 0}%`} />
+                    <StatCard icon={Activity} label="Active Today" value={stats.active_today} />
+                    <StatCard icon={Activity} label="Active This Week" value={stats.active_this_week} />
+                  </div>
+                )}
+                <div className="relative mb-6">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Search students…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+                </div>
+                <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden">
+                  {filtered.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground">
+                      {students.length === 0 ? "No students registered yet." : "No students match your search."}
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Student</TableHead><TableHead>Grade</TableHead>
+                          <TableHead className="text-center">Quizzes</TableHead><TableHead className="text-center">Avg %</TableHead>
+                          <TableHead>Last Active</TableHead><TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filtered.map((student) => (
+                          <TableRow key={student.user_id}>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <Avatar className="h-9 w-9">
+                                  <AvatarImage src={student.avatar_url || undefined} />
+                                  <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(student.full_name)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <div className="font-medium text-foreground">{student.full_name}</div>
+                                  <div className="text-xs text-muted-foreground">{student.email}</div>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {student.grade ? <Badge variant="secondary" className="text-xs">{student.grade}</Badge> : <span className="text-xs text-muted-foreground">—</span>}
+                            </TableCell>
+                            <TableCell className="text-center text-foreground">{student.total_quizzes_taken}</TableCell>
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <span className="text-foreground font-medium">{student.avg_percentage}%</span>
+                                <Progress value={student.avg_percentage} className="h-1.5 w-12" />
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {student.last_quiz_at ? format(new Date(student.last_quiz_at), "MMM d, yyyy") : "Never"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button size="sm" variant="outline" onClick={() => viewStudent(student)}>
+                                <Eye className="h-4 w-4 mr-1" /> View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="badges">
+                <BadgeManager />
               </TabsContent>
             </Tabs>
           </div>
