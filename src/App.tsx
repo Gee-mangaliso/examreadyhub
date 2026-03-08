@@ -19,6 +19,7 @@ import SubjectProgress from "./pages/SubjectProgress";
 import ProfileSettings from "./pages/ProfileSettings";
 import Leaderboard from "./pages/Leaderboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const AnimatedRoutes = () => {
         <Route path="/subject-progress/:subjectId" element={<ProtectedRoute><SubjectProgress /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
         <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>

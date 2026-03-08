@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Bell, Trophy, BookOpen, Flame, Info, Check } from "lucide-react";
+import { Bell, Trophy, BookOpen, Flame, Info, Check, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   Popover,
   PopoverContent,
@@ -24,6 +25,7 @@ const typeIcons: Record<string, typeof Bell> = {
   badge: Trophy,
   content: BookOpen,
   streak_warning: Flame,
+  suggestion: Sparkles,
   info: Info,
 };
 
@@ -149,6 +151,15 @@ const NotificationBell = () => {
             </div>
           )}
         </ScrollArea>
+        <div className="border-t border-border px-4 py-2">
+          <Link
+            to="/notifications"
+            onClick={() => setOpen(false)}
+            className="block text-center text-xs font-medium text-primary hover:text-primary/80 transition-colors py-1"
+          >
+            View All Notifications
+          </Link>
+        </div>
       </PopoverContent>
     </Popover>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Users, BarChart3, TrendingUp, Activity, Eye, Search,
-  ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen, Sparkles
+  ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen, Sparkles, SearchIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,7 @@ import PageTransition from "@/components/PageTransition";
 import ContentManager from "@/components/admin/ContentManager";
 import BadgeManager from "@/components/admin/BadgeManager";
 import SuggestionManager from "@/components/admin/SuggestionManager";
+import SearchAnalytics from "@/components/admin/SearchAnalytics";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
@@ -189,6 +190,7 @@ const AdminDashboard = () => {
                 <TabsTrigger value="content" className="gap-1.5"><FolderOpen className="h-4 w-4" />Content</TabsTrigger>
                 <TabsTrigger value="students" className="gap-1.5"><Users className="h-4 w-4" />Students</TabsTrigger>
                 <TabsTrigger value="suggestions" className="gap-1.5"><Sparkles className="h-4 w-4" />Suggestions</TabsTrigger>
+                <TabsTrigger value="analytics" className="gap-1.5"><Search className="h-4 w-4" />Search Analytics</TabsTrigger>
                 <TabsTrigger value="badges" className="gap-1.5"><Award className="h-4 w-4" />Badges</TabsTrigger>
               </TabsList>
 
@@ -263,6 +265,10 @@ const AdminDashboard = () => {
                     </Table>
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="analytics">
+                <SearchAnalytics />
               </TabsContent>
 
               <TabsContent value="suggestions">
