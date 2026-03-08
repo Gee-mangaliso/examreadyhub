@@ -25,6 +25,7 @@ import MemoRequestManager from "@/components/admin/MemoRequestManager";
 import FeedbackManager from "@/components/admin/FeedbackManager";
 import TestimonialManager from "@/components/admin/TestimonialManager";
 import RatingsViewer from "@/components/admin/RatingsViewer";
+import StudentActions from "@/components/admin/StudentActions";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
@@ -155,6 +156,20 @@ const AdminDashboard = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Student Actions */}
+              <div className="bg-card border border-border rounded-lg p-6 shadow-card mb-6">
+                <h3 className="font-heading text-lg text-foreground mb-4">Manage Student</h3>
+                <StudentActions
+                  studentId={selectedStudent.user_id}
+                  studentName={selectedStudent.full_name}
+                  onDeleted={() => {
+                    setSelectedStudent(null);
+                    setStudents((prev) => prev.filter((s) => s.user_id !== selectedStudent.user_id));
+                  }}
+                />
+              </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
                 <StatCard icon={BarChart3} label="Quizzes Taken" value={selectedStudent.total_quizzes_taken} />
                 <StatCard icon={Award} label="Total Score" value={`${selectedStudent.total_score}/${selectedStudent.total_questions}`} />

@@ -2,12 +2,20 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+interface BanInfo {
+  is_banned: boolean;
+  reason?: string;
+  ends_at?: string | null;
+}
+
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: { full_name: string; avatar_url: string | null; grade: string | null } | null;
   isAdmin: boolean;
   loading: boolean;
+  banInfo: BanInfo | null;
+  restrictions: any[];
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -27,6 +35,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [banInfo, setBanInfo] = useState<BanInfo | null>(null);
+  const [restrictions, setRestrictions] = useState<any[]>([]);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -42,6 +52,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       _role: "admin",
     });
     setIsAdmin(roleData === true);
+
+    // Check for active bans and restrictions
+    const { data: restrictionsData } = await supabase
+      .from("user_restrictions")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("is_active", true);
+
+    const now = new Date();
+    const active = (restrictionsData || []).filter((r: any) =>
+      !r.ends_at || new Date(r.ends_at) > now
+    );
+
+    const activeBan = active.find((r: any) => r.restriction_type === "ban");
+    if (activeBan) {
+      setBanInfo({
+        is_banned: true,
+        reason: activeBan.reason,
+        ends_at: activeBan.ends_at,
+      });
+    } else {
+      setBanInfo(null);
+    }
+
+    setRestrictions(active.filter((r: any) => r.restriction_type === "content_restriction"));
   };
 
   useEffect(() => {
@@ -89,10 +124,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setProfile(null);
     setIsAdmin(false);
+    setBanInfo(null);
+    setRestrictions([]);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, isAdmin, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, isAdmin, loading, banInfo, restrictions, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
