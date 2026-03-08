@@ -859,6 +859,56 @@ export type Database = {
           },
         ]
       }
+      user_restrictions: {
+        Row: {
+          created_at: string
+          created_by: string
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          reason: string | null
+          restricted_content_type: string | null
+          restricted_subject_id: string | null
+          restriction_type: string
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          restricted_content_type?: string | null
+          restricted_subject_id?: string | null
+          restriction_type?: string
+          starts_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          reason?: string | null
+          restricted_content_type?: string | null
+          restricted_subject_id?: string | null
+          restriction_type?: string
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_restrictions_restricted_subject_id_fkey"
+            columns: ["restricted_subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
