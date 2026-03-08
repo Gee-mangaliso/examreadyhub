@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { GraduationCap, Menu, X, Sun, Moon, LogOut } from "lucide-react";
+import { GraduationCap, Menu, X, Sun, Moon, LogOut, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
