@@ -286,51 +286,51 @@ const LeaderboardTable = ({
                   <span className="h-px flex-1 bg-border" />
                 </div>
               )}
-            <div
-              key={entry.user_id}
-              className={`grid grid-cols-[48px_1fr_80px_80px_100px] sm:grid-cols-[48px_1fr_100px_80px_100px_80px] items-center px-4 py-3 transition-colors ${
-                isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20"
-              }`}
-            >
-              <div className="flex items-center justify-center">{getRankIcon(rank)}</div>
-              <div className="flex items-center gap-3 min-w-0">
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarImage src={entry.avatar_url || undefined} />
-                  <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(entry.full_name)}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <span className="text-sm font-medium text-foreground truncate block">
-                    {entry.full_name}
-                    {isCurrentUser && <span className="text-xs text-primary ml-1">(You)</span>}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    {entry.current_streak > 0 && (
-                      <Badge variant="secondary" className="text-[10px] px-1 py-0 gap-0.5">
-                        <Flame className="h-2.5 w-2.5 text-orange-500" />{entry.current_streak}
-                      </Badge>
-                    )}
-                    {entry.badge_count > 0 && (
-                      <Badge variant="outline" className="text-[10px] px-1 py-0 gap-0.5">
-                        <Award className="h-2.5 w-2.5" />{entry.badge_count}
-                      </Badge>
-                    )}
+              <div
+                className={`grid grid-cols-[48px_1fr_80px_80px_100px] sm:grid-cols-[48px_1fr_100px_80px_100px_80px] items-center px-4 py-3 transition-colors ${
+                  isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20"
+                }`}
+              >
+                <div className="flex items-center justify-center">{getRankIcon(actualRank)}</div>
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar className="h-8 w-8 shrink-0">
+                    <AvatarImage src={entry.avatar_url || undefined} />
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(entry.full_name)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-foreground truncate block">
+                      {entry.full_name}
+                      {isCurrentUser && <span className="text-xs text-primary ml-1">(You)</span>}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {entry.current_streak > 0 && (
+                        <Badge variant="secondary" className="text-[10px] px-1 py-0 gap-0.5">
+                          <Flame className="h-2.5 w-2.5 text-orange-500" />{entry.current_streak}
+                        </Badge>
+                      )}
+                      {entry.badge_count > 0 && (
+                        <Badge variant="outline" className="text-[10px] px-1 py-0 gap-0.5">
+                          <Award className="h-2.5 w-2.5" />{entry.badge_count}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="text-center text-sm font-semibold text-foreground">
-                {entry.total_score}/{entry.total_questions}
-              </div>
-              {showWeekly && (
-                <div className="text-center text-sm text-muted-foreground hidden sm:block">
-                  {entry.weekly_quizzes}
+                <div className="text-center text-sm font-semibold text-foreground">
+                  {entry.total_score}/{entry.total_questions}
                 </div>
-              )}
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-sm font-medium text-foreground">{entry.avg_percentage}%</span>
-                <Progress value={entry.avg_percentage} className="h-1.5 w-full max-w-[80px]" />
-              </div>
-              <div className="hidden sm:flex items-center justify-center gap-1">
-                {getTrendIcon(entry.trend)}
+                {showWeekly && (
+                  <div className="text-center text-sm text-muted-foreground hidden sm:block">
+                    {entry.weekly_quizzes}
+                  </div>
+                )}
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-sm font-medium text-foreground">{entry.avg_percentage}%</span>
+                  <Progress value={entry.avg_percentage} className="h-1.5 w-full max-w-[80px]" />
+                </div>
+                <div className="hidden sm:flex items-center justify-center gap-1">
+                  {getTrendIcon(entry.trend)}
+                </div>
               </div>
             </div>
           );
