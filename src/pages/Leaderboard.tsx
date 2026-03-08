@@ -200,7 +200,7 @@ const Leaderboard = () => {
 
               {/* OVERALL SCORES TAB */}
               <TabsContent value="overall">
-                <LeaderboardTable entries={overallEntries} user={user} showWeekly={false} />
+                <LeaderboardTable entries={overallEntries} user={user} showWeekly={false} allEntries={entries} />
               </TabsContent>
 
               {/* BADGES TAB */}
