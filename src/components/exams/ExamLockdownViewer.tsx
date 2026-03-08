@@ -235,7 +235,5 @@ const ExamLockdownViewer = ({ paper, onClose, onSubmitScore, alreadyCompleted }:
   );
 };
 
-// Need to import Loader2 for the submit button
-import { Loader2 } from "lucide-react";
 
 export default ExamLockdownViewer;
