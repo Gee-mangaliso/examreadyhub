@@ -274,9 +274,18 @@ const LeaderboardTable = ({
           <span className="text-xs font-medium text-muted-foreground text-center hidden sm:block">Trend</span>
         </div>
         {entries.map((entry, i) => {
-          const rank = i + 1;
+          const actualRank = rankSource.findIndex((e) => e.user_id === entry.user_id) + 1;
           const isCurrentUser = user?.id === entry.user_id;
+          const showSeparator = i > 0 && actualRank > (rankSource.findIndex((e) => e.user_id === entries[i - 1].user_id) + 1) + 1;
           return (
+            <div key={entry.user_id}>
+              {showSeparator && (
+                <div className="flex items-center justify-center py-2 text-muted-foreground text-xs gap-2">
+                  <span className="h-px flex-1 bg-border" />
+                  <span>•••</span>
+                  <span className="h-px flex-1 bg-border" />
+                </div>
+              )}
             <div
               key={entry.user_id}
               className={`grid grid-cols-[48px_1fr_80px_80px_100px] sm:grid-cols-[48px_1fr_100px_80px_100px_80px] items-center px-4 py-3 transition-colors ${
