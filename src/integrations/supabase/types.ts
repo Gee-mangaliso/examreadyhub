@@ -675,6 +675,24 @@ export type Database = {
         }[]
       }
       get_study_streak: { Args: { _user_id: string }; Returns: number }
+      get_subject_leaderboard: {
+        Args: { _subject_id: string; limit_count?: number }
+        Returns: {
+          avatar_url: string
+          avg_percentage: number
+          badge_count: number
+          current_streak: number
+          full_name: string
+          prev_weekly_avg: number
+          quizzes_taken: number
+          total_questions: number
+          total_score: number
+          trend: string
+          user_id: string
+          weekly_avg: number
+          weekly_quizzes: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
