@@ -505,3 +505,4 @@ const ContactSection = ({ user }: { user: any }) => {
 };
 
 export default Home;
+
