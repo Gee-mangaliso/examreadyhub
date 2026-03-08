@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Youtube } from "lucide-react";
+import { GraduationCap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 const Footer = () => {
@@ -8,7 +8,7 @@ const Footer = () => {
   return (
     <footer className="bg-card border-t border-border">
       <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
           {/* Branding */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2 text-foreground font-heading text-lg">
@@ -39,45 +39,6 @@ const Footer = () => {
                 </>
               )}
             </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div className="space-y-4">
-            <h3 className="font-heading text-sm font-semibold text-foreground uppercase tracking-wider">Contact Us</h3>
-            <ul className="space-y-2.5">
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="h-4 w-4 text-primary shrink-0" />
-                support@examreadyhub.co.za
-              </li>
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="h-4 w-4 text-primary shrink-0" />
-                +27 (0) 12 345 6789
-              </li>
-              <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 text-primary shrink-0" />
-                South Africa
-              </li>
-            </ul>
-          </div>
-
-          {/* Social Media */}
-          <div className="space-y-4">
-            <h3 className="font-heading text-sm font-semibold text-foreground uppercase tracking-wider">Follow Us</h3>
-            <div className="flex items-center gap-3">
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors" aria-label="Facebook">
-                <Facebook className="h-4 w-4" />
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors" aria-label="Twitter">
-                <Twitter className="h-4 w-4" />
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors" aria-label="Instagram">
-                <Instagram className="h-4 w-4" />
-              </a>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors" aria-label="YouTube">
-                <Youtube className="h-4 w-4" />
-              </a>
-            </div>
-            <p className="text-xs text-muted-foreground">Stay connected for study tips, updates, and more.</p>
           </div>
         </div>
 
