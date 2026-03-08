@@ -305,79 +305,113 @@ const Home = () => {
 };
 
 /* ── Testimonials ── */
-const testimonials = [
-  {
-    name: "Thandi M.",
-    grade: "Grade 12",
-    quote: "ExamReady Hub helped me improve my Maths mark from 48% to 76%! The worked examples made everything click.",
-    stars: 5,
-  },
-  {
-    name: "Sipho K.",
-    grade: "Grade 11",
-    quote: "The practice exams with the lockdown browser feel just like the real thing. I went into my finals feeling so prepared.",
-    stars: 5,
-  },
-  {
-    name: "Aisha N.",
-    grade: "Grade 10",
-    quote: "I love the AI study assistant — it explains concepts better than my textbook and it's available 24/7!",
-    stars: 5,
-  },
-  {
-    name: "Liam D.",
-    grade: "Grade 9",
-    quote: "The quizzes are actually fun. I've been on a 14-day study streak and my Science marks have improved so much.",
-    stars: 4,
-  },
-  {
-    name: "Naledi P.",
-    grade: "Grade 12",
-    quote: "As someone in a rural school with limited resources, ExamReady Hub has been a game-changer. The notes are so thorough!",
-    stars: 5,
-  },
-  {
-    name: "Mrs. Van der Merwe",
-    grade: "Teacher",
-    quote: "I recommend ExamReady Hub to all my students. The admin suggestion feature lets me guide their study plans perfectly.",
-    stars: 5,
-  },
+const defaultTestimonials = [
+  { name: "Thandi M.", grade: "Grade 12", quote: "ExamReady Hub helped me improve my Maths mark from 48% to 76%! The worked examples made everything click.", stars: 5 },
+  { name: "Sipho K.", grade: "Grade 11", quote: "The practice exams with the lockdown browser feel just like the real thing. I went into my finals feeling so prepared.", stars: 5 },
+  { name: "Naledi P.", grade: "Grade 12", quote: "As someone in a rural school with limited resources, ExamReady Hub has been a game-changer. The notes are so thorough!", stars: 5 },
 ];
 
-const TestimonialsSection = () => (
-  <section className="py-20 px-4 bg-muted/30">
-    <div className="max-w-6xl mx-auto">
-      <div className="text-center mb-12">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-primary text-sm mb-4">
-          <Star className="h-4 w-4" />
-          Success Stories
-        </div>
-        <h2 className="text-3xl font-heading text-foreground mb-3">What Our Learners Say</h2>
-        <p className="text-muted-foreground max-w-lg mx-auto">Real stories from students and teachers across South Africa.</p>
-      </div>
+interface Testimonial { id?: string; full_name?: string; name?: string; grade: string | null; quote: string; stars: number }
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {testimonials.map((t) => (
-          <div key={t.name} className="bg-card rounded-xl p-6 shadow-card border border-border flex flex-col">
-            <Quote className="h-6 w-6 text-primary/30 mb-3 shrink-0" />
-            <p className="text-foreground text-sm flex-1 italic leading-relaxed">"{t.quote}"</p>
-            <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
-              <div>
-                <p className="font-medium text-foreground text-sm">{t.name}</p>
-                <p className="text-xs text-muted-foreground">{t.grade}</p>
-              </div>
-              <div className="flex gap-0.5">
-                {Array.from({ length: t.stars }).map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                ))}
+const TestimonialsSection = ({ user }: { user: any }) => {
+  const { toast } = useToast();
+  const [dbTestimonials, setDbTestimonials] = useState<Testimonial[]>([]);
+  const [quote, setQuote] = useState("");
+  const [stars, setStars] = useState(5);
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    supabase.from("testimonials").select("*").eq("approved", true).order("created_at", { ascending: false }).then(({ data }) => {
+      if (data) setDbTestimonials(data as Testimonial[]);
+    });
+  }, []);
+
+  const allTestimonials = [
+    ...dbTestimonials.map(t => ({ name: t.full_name || "Anonymous", grade: t.grade, quote: t.quote, stars: t.stars })),
+    ...defaultTestimonials,
+  ];
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) { toast({ title: "Please sign in to share your story", variant: "destructive" }); return; }
+    if (!quote.trim()) { toast({ title: "Please write your testimonial", variant: "destructive" }); return; }
+    setSending(true);
+    const { data: profile } = await supabase.from("profiles").select("full_name, grade").eq("user_id", user.id).single();
+    const { error } = await supabase.from("testimonials").insert({
+      user_id: user.id,
+      full_name: profile?.full_name || "Anonymous",
+      grade: profile?.grade || null,
+      quote: quote.trim(),
+      stars,
+    });
+    setSending(false);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    else { toast({ title: "Thank you! ✨", description: "Your testimonial has been submitted and will appear once approved." }); setQuote(""); setStars(5); }
+  };
+
+  return (
+    <section className="py-20 px-4 bg-muted/30">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-primary text-sm mb-4">
+            <Star className="h-4 w-4" />
+            Success Stories
+          </div>
+          <h2 className="text-3xl font-heading text-foreground mb-3">What Our Learners Say</h2>
+          <p className="text-muted-foreground max-w-lg mx-auto">Real stories from students and teachers across South Africa.</p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {allTestimonials.slice(0, 6).map((t, idx) => (
+            <div key={idx} className="bg-card rounded-xl p-6 shadow-card border border-border flex flex-col">
+              <Quote className="h-6 w-6 text-primary/30 mb-3 shrink-0" />
+              <p className="text-foreground text-sm flex-1 italic leading-relaxed">"{t.quote}"</p>
+              <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-foreground text-sm">{t.name}</p>
+                  {t.grade && <p className="text-xs text-muted-foreground">{t.grade}</p>}
+                </div>
+                <div className="flex gap-0.5">
+                  {Array.from({ length: t.stars }).map((_, i) => (
+                    <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
               </div>
             </div>
+          ))}
+        </div>
+
+        {/* Learner Submission Form */}
+        {user && (
+          <div className="max-w-lg mx-auto bg-card rounded-xl p-6 shadow-card border border-border">
+            <h3 className="font-heading text-lg text-foreground mb-4 text-center">Share Your Story</h3>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="testimonial-quote">Your experience with ExamReady Hub</Label>
+                <Textarea id="testimonial-quote" value={quote} onChange={(e) => setQuote(e.target.value)} placeholder="How has ExamReady Hub helped you?" rows={3} maxLength={500} required />
+              </div>
+              <div className="space-y-2">
+                <Label>Rating</Label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <button key={s} type="button" onClick={() => setStars(s)} className="focus:outline-none">
+                      <Star className={`h-6 w-6 transition-colors ${s <= stars ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Button type="submit" disabled={sending} className="w-full gap-2">
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                {sending ? "Submitting…" : "Submit Testimonial"}
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">Your testimonial will appear after admin approval.</p>
+            </form>
           </div>
-        ))}
+        )}
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 /* ── Contact Form ── */
 const ContactSection = ({ user }: { user: any }) => {
