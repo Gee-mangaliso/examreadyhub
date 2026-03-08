@@ -25,6 +25,7 @@ const typeIcons: Record<string, typeof Bell> = {
   badge: Trophy,
   content: BookOpen,
   streak_warning: Flame,
+  suggestion: Sparkles,
   info: Info,
 };
 
