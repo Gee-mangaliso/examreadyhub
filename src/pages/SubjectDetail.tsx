@@ -166,7 +166,27 @@ const SubjectDetail = () => {
                           className="w-full text-left px-6 py-4 flex items-center gap-3 hover:bg-muted/30 transition-colors"
                         >
                           <BookOpen className="h-5 w-5 text-primary shrink-0" />
-                          <span className="font-medium text-foreground">{note.title}</span>
+                          <span className="font-medium text-foreground flex-1">{note.title}</span>
+                          {note.content && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="shrink-0 h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const blob = new Blob([`# ${note.title}\n\n${note.content}`], { type: "text/markdown" });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = `${note.title.replace(/\s+/g, "-")}.md`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                              title="Download note"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          )}
                         </button>
                         {expandedNote === note.id && note.content && (
                           <div className="px-6 pb-6 border-t border-border pt-4 prose prose-sm max-w-none text-foreground">
@@ -195,13 +215,22 @@ const SubjectDetail = () => {
                               {slide.content && <p className="text-sm text-muted-foreground mt-1">{slide.content.slice(0, 200)}</p>}
                             </div>
                           </div>
-                          {slide.file_url && (
-                            <Button asChild size="sm" variant="outline">
-                              <a href={slide.file_url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-4 w-4 mr-1" /> View
-                              </a>
-                            </Button>
-                          )}
+                          <div className="flex gap-2 shrink-0">
+                            {slide.file_url && (
+                              <>
+                                <Button asChild size="sm" variant="outline">
+                                  <a href={slide.file_url} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-4 w-4 mr-1" /> View
+                                  </a>
+                                </Button>
+                                <Button asChild size="sm" variant="outline">
+                                  <a href={slide.file_url} download>
+                                    <Download className="h-4 w-4 mr-1" /> Download
+                                  </a>
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -222,15 +251,35 @@ const SubjectDetail = () => {
                           className="w-full text-left px-6 py-4 flex items-center gap-3 hover:bg-muted/30 transition-colors"
                         >
                           <Lightbulb className="h-5 w-5 text-primary shrink-0" />
-                          <span className="font-medium text-foreground">{ex.title}</span>
-                          {ex.file_url && <Badge variant="secondary" className="text-xs ml-auto">File attached</Badge>}
+                          <span className="font-medium text-foreground flex-1">{ex.title}</span>
+                          {ex.file_url && <Badge variant="secondary" className="text-xs">File attached</Badge>}
+                          {ex.content && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="shrink-0 h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const blob = new Blob([`# ${ex.title}\n\n${ex.content}`], { type: "text/markdown" });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = `${ex.title.replace(/\s+/g, "-")}.md`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                              title="Download example"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          )}
                         </button>
                         {expandedExample === ex.id && (
                           <div className="px-6 pb-6 border-t border-border pt-4">
                             {ex.content && <div className="prose prose-sm max-w-none text-foreground mb-4">{renderMarkdown(ex.content)}</div>}
                             {ex.file_url && (
                               <Button asChild size="sm" variant="outline">
-                                <a href={ex.file_url} target="_blank" rel="noopener noreferrer">
+                                <a href={ex.file_url} download>
                                   <Download className="h-4 w-4 mr-1" /> Download File
                                 </a>
                               </Button>
