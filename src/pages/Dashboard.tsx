@@ -5,6 +5,7 @@ import * as Icons from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { useAuth } from "@/hooks/useAuth";
+import StudyStreak from "@/components/StudyStreak";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,6 +100,9 @@ const Dashboard = () => {
                 <p className="text-muted-foreground text-sm">{user?.email}</p>
               </div>
             </div>
+
+            {/* Study Streak */}
+            <StudyStreak />
 
             {/* My Subjects */}
             <div className="flex items-center justify-between mb-6">

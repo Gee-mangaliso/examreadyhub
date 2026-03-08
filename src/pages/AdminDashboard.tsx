@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
+import QuizManager from "@/components/admin/QuizManager";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
@@ -230,9 +232,17 @@ const AdminDashboard = () => {
         <main className="flex-1 py-16 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl sm:text-4xl font-heading text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Monitor student participation and performance</p>
+             <h1 className="text-3xl sm:text-4xl font-heading text-foreground">Admin Dashboard</h1>
+              <p className="text-muted-foreground mt-1">Monitor student participation and manage content</p>
             </div>
+
+            <Tabs defaultValue="students" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="students">Students</TabsTrigger>
+                <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="students" className="space-y-6">
 
             {/* Platform stats */}
             {stats && (
@@ -321,6 +331,12 @@ const AdminDashboard = () => {
                 </Table>
               )}
             </div>
+              </TabsContent>
+
+              <TabsContent value="quizzes">
+                <QuizManager />
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
       </div>
