@@ -197,6 +197,8 @@ const AdminDashboard = () => {
                 <TabsTrigger value="analytics" className="gap-1.5"><Search className="h-4 w-4" />Search Analytics</TabsTrigger>
                 <TabsTrigger value="badges" className="gap-1.5"><Award className="h-4 w-4" />Badges</TabsTrigger>
                 <TabsTrigger value="memos" className="gap-1.5"><FileText className="h-4 w-4" />Memo Requests</TabsTrigger>
+                <TabsTrigger value="feedback" className="gap-1.5"><Activity className="h-4 w-4" />Feedback</TabsTrigger>
+                <TabsTrigger value="testimonials" className="gap-1.5"><Eye className="h-4 w-4" />Testimonials</TabsTrigger>
               </TabsList>
 
               <TabsContent value="content">
