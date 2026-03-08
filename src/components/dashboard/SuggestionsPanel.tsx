@@ -80,6 +80,16 @@ const SuggestionsPanel = () => {
     setSuggestions((prev) => prev.map((s) => (s.id === id ? { ...s, read: true } : s)));
   };
 
+  const sendReply = async (id: string) => {
+    const text = replyText.trim();
+    if (!text) return;
+    await supabase.from("admin_suggestions").update({ reply: text, replied_at: new Date().toISOString(), read: true }).eq("id", id);
+    playSend();
+    setSuggestions((prev) => prev.map((s) => (s.id === id ? { ...s, reply: text, read: true } : s)));
+    setReplyingTo(null);
+    setReplyText("");
+  };
+
   if (loading) {
     return (
       <div className="bg-card border border-border rounded-lg p-6 shadow-card min-h-[180px] flex items-center justify-center">
