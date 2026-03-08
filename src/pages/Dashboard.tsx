@@ -119,7 +119,7 @@ const Dashboard = () => {
         <main className="flex-1 py-16 px-4">
           <div className="max-w-5xl mx-auto">
             {/* Profile card */}
-            <div className="bg-card border border-border rounded-lg p-6 shadow-card flex items-center gap-5 mb-10">
+            <Link to="/profile" className="bg-card border border-border rounded-lg p-6 shadow-card flex items-center gap-5 mb-10 hover:border-primary/40 transition-colors cursor-pointer">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="h-8 w-8 text-primary" />
               </div>
@@ -129,7 +129,8 @@ const Dashboard = () => {
                 </h1>
                 <p className="text-muted-foreground text-sm">{user?.email}</p>
               </div>
-            </div>
+              <Icons.ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </Link>
 
             <StudyStreak />
 
