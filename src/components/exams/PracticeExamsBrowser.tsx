@@ -260,8 +260,10 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
                                 )}
                               </div>
                             </div>
-                            {paper.file_url && (
-                              <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                            {!completion && paper.file_url && (
+                              <Badge variant="outline" className="text-[10px] gap-0.5 text-primary shrink-0">
+                                <FileText className="h-2.5 w-2.5" /> Open
+                              </Badge>
                             )}
                           </button>
 
