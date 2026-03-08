@@ -15,6 +15,7 @@ const Header = () => {
   const navLinks = [
     { to: "/", label: "Home" },
     { to: "/grades", label: "Grades" },
+    { to: "/leaderboard", label: "Leaderboard" },
     ...(user ? [
       { to: "/dashboard", label: "Dashboard" },
       { to: "/profile", label: "Profile" },
