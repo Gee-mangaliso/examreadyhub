@@ -43,6 +43,8 @@ const SubjectDetail = () => {
   const [notes, setNotes] = useState<Note[]>([]);
   const [slides, setSlides] = useState<Slide[]>([]);
   const [examples, setExamples] = useState<WorkedExample[]>([]);
+  const [textbooks, setTextbooks] = useState<Textbook[]>([]);
+  const [studyGuides, setStudyGuides] = useState<StudyGuide[]>([]);
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [exams, setExams] = useState<Quiz[]>([]);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
