@@ -32,48 +32,57 @@ const QuizPlayer = ({ quiz, questions, onBack }: QuizPlayerProps) => {
   const { user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [answers, setAnswers] = useState<Record<number, { selected: string; correct: boolean }>>({});
+  const [answers, setAnswers] = useState<Record<number, string>>({});
   const [finished, setFinished] = useState(false);
+  const [reviewing, setReviewing] = useState(false);
 
   const current = questions[currentIndex];
   const progress = ((currentIndex + 1) / questions.length) * 100;
-  const score = Object.values(answers).filter((a) => a.correct).length;
 
   const handleSelect = (option: string) => {
-    if (showResult) return;
     setSelectedAnswer(option);
   };
 
-  const handleCheck = () => {
+  const handleNext = () => {
     if (!selectedAnswer) return;
-    const correct = selectedAnswer === current.correct_answer;
-    setAnswers((prev) => ({ ...prev, [currentIndex]: { selected: selectedAnswer, correct } }));
-    setShowResult(true);
-  };
+    const updated = { ...answers, [currentIndex]: selectedAnswer };
+    setAnswers(updated);
 
-  const handleNext = async () => {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((i) => i + 1);
-      setSelectedAnswer(null);
-      setShowResult(false);
+      setSelectedAnswer(updated[currentIndex + 1] || null);
     } else {
-      setFinished(true);
-      // Save attempt
-      if (user) {
-        const finalAnswers = { ...answers, [currentIndex]: { selected: selectedAnswer!, correct: selectedAnswer === current.correct_answer } };
-        const finalScore = Object.values(finalAnswers).filter((a) => a.correct).length;
-        const { error } = await supabase.from("quiz_attempts").insert({
-          quiz_id: quiz.id,
-          user_id: user.id,
-          score: finalScore,
-          total_questions: questions.length,
-          answers: finalAnswers as any,
-        });
-        if (error) toast.error("Failed to save quiz attempt");
-      }
+      // All questions answered — finish
+      finishQuiz(updated);
     }
   };
+
+  const handlePrev = () => {
+    if (currentIndex > 0) {
+      const updated = selectedAnswer ? { ...answers, [currentIndex]: selectedAnswer } : answers;
+      setAnswers(updated);
+      setCurrentIndex((i) => i - 1);
+      setSelectedAnswer(updated[currentIndex - 1] || null);
+    }
+  };
+
+  const finishQuiz = async (finalAnswers: Record<number, string>) => {
+    setFinished(true);
+    if (user) {
+      const score = questions.filter((q, i) => finalAnswers[i] === q.correct_answer).length;
+      const { error } = await supabase.from("quiz_attempts").insert({
+        quiz_id: quiz.id,
+        user_id: user.id,
+        score,
+        total_questions: questions.length,
+        answers: finalAnswers as any,
+      });
+      if (error) toast.error("Failed to save quiz attempt");
+    }
+  };
+
+  const score = questions.filter((q, i) => answers[i] === q.correct_answer).length;
+  const pct = Math.round((score / questions.length) * 100);
 
   if (finished) {
     const pct = Math.round((score / questions.length) * 100);
