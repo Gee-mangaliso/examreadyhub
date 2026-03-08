@@ -290,6 +290,14 @@ const AdminDashboard = () => {
               <TabsContent value="memos">
                 <MemoRequestManager />
               </TabsContent>
+
+              <TabsContent value="feedback">
+                <FeedbackManager />
+              </TabsContent>
+
+              <TabsContent value="testimonials">
+                <TestimonialManager />
+              </TabsContent>
             </Tabs>
           </div>
         </main>
