@@ -152,6 +152,9 @@ const SuggestionHistory = () => {
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Circle className="h-3.5 w-3.5 text-muted-foreground" /> {unreadCount} unread
         </div>
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <MessageSquare className="h-3.5 w-3.5 text-blue-500" /> {repliedCount} replied
+        </div>
       </div>
 
       {/* Filters */}
