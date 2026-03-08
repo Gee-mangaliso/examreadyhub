@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import QuizPlayer from "@/components/QuizPlayer";
+import PracticeExamsBrowser from "@/components/exams/PracticeExamsBrowser";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
