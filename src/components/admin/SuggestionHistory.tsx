@@ -229,6 +229,15 @@ const SuggestionHistory = () => {
                   <TableCell className="text-muted-foreground text-sm max-w-[150px] truncate">
                     {s.message || "—"}
                   </TableCell>
+                  <TableCell className="text-sm max-w-[150px] truncate">
+                    {s.reply ? (
+                      <span className="text-blue-600 dark:text-blue-400" title={`Replied ${s.replied_at ? format(new Date(s.replied_at), "MMM d, HH:mm") : ""}`}>
+                        "{s.reply}"
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-center">
                     {s.read ? (
                       <Badge variant="secondary" className="gap-1">

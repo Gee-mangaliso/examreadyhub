@@ -57,6 +57,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <AnimatedRoutes />
+            <AIChatbot />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

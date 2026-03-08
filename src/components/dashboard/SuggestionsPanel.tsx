@@ -131,13 +131,39 @@ const SuggestionsPanel = () => {
                       </>
                     )}
                   </div>
-                  {s.message && <p className="text-xs text-muted-foreground mt-1 italic">"{s.message}"</p>}
+                {s.message && <p className="text-xs text-muted-foreground mt-1 italic">"{s.message}"</p>}
+                  {s.reply && (
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 flex items-center gap-1">
+                      <MessageSquare className="h-3 w-3" /> You replied: "{s.reply}"
+                    </p>
+                  )}
+                  {replyingTo === s.id && (
+                    <div className="flex gap-1.5 mt-2">
+                      <Input
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        placeholder="Write a reply…"
+                        className="h-7 text-xs"
+                        onKeyDown={(e) => e.key === "Enter" && sendReply(s.id)}
+                      />
+                      <Button size="sm" className="h-7 w-7 p-0 shrink-0" onClick={() => sendReply(s.id)}>
+                        <Send className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-                {!s.read && (
-                  <Button size="sm" variant="ghost" className="shrink-0 h-7 w-7 p-0" onClick={() => markRead(s.id)} title="Mark as read">
-                    <Check className="h-3.5 w-3.5" />
-                  </Button>
-                )}
+                <div className="flex flex-col gap-1 shrink-0">
+                  {!s.read && (
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => markRead(s.id)} title="Mark as read">
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  {!s.reply && (
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setReplyingTo(replyingTo === s.id ? null : s.id); setReplyText(""); }} title="Reply">
+                      <MessageSquare className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
             );
           })}
