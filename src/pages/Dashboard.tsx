@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User, BarChart3, Clock, Trophy, Sparkles, Plus, X } from "lucide-react";
+import { User, BarChart3, Clock, Trophy, Sparkles, Plus, X, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import Header from "@/components/Header";
