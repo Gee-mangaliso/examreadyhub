@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Trophy, Medal, Crown, Users, TrendingUp, TrendingDown, Minus,
-  Flame, Zap, Award, Filter,
+  Flame, Zap, Award, Filter, Sparkles,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -41,10 +43,11 @@ interface SubjectOption {
   name: string;
 }
 
-const getRankIcon = (rank: number) => {
-  if (rank === 1) return <Crown className="h-6 w-6 text-yellow-500" />;
-  if (rank === 2) return <Medal className="h-6 w-6 text-gray-400" />;
-  if (rank === 3) return <Medal className="h-6 w-6 text-amber-600" />;
+const getRankIcon = (rank: number, animated = false) => {
+  const baseClass = animated ? "animate-[scale-in_0.4s_ease-out]" : "";
+  if (rank === 1) return <Crown className={`h-6 w-6 text-yellow-500 ${baseClass}`} />;
+  if (rank === 2) return <Medal className={`h-6 w-6 text-gray-400 ${baseClass}`} />;
+  if (rank === 3) return <Medal className={`h-6 w-6 text-amber-600 ${baseClass}`} />;
   return <span className="text-sm font-bold text-muted-foreground w-6 text-center">{rank}</span>;
 };
 
@@ -65,6 +68,37 @@ const iconMap: Record<string, any> = { award: Award, zap: Zap, flame: Flame, tro
 const getInitials = (name: string) =>
   name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
 
+const getRankGlow = (rank: number, isCurrentUser: boolean) => {
+  if (!isCurrentUser || rank > 3) return "";
+  if (rank === 1) return "ring-2 ring-yellow-500/30 shadow-[0_0_20px_rgba(234,179,8,0.15)]";
+  if (rank === 2) return "ring-2 ring-gray-400/30 shadow-[0_0_15px_rgba(156,163,175,0.15)]";
+  return "ring-2 ring-amber-600/30 shadow-[0_0_15px_rgba(217,119,6,0.15)]";
+};
+
+const fireConfetti = () => {
+  const duration = 2000;
+  const end = Date.now() + duration;
+
+  const frame = () => {
+    confetti({
+      particleCount: 3,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0, y: 0.7 },
+      colors: ["#fbbf24", "#f59e0b", "#d97706", "#10b981", "#6366f1"],
+    });
+    confetti({
+      particleCount: 3,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1, y: 0.7 },
+      colors: ["#fbbf24", "#f59e0b", "#d97706", "#10b981", "#6366f1"],
+    });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  };
+  frame();
+};
+
 const Leaderboard = () => {
   const { user, isAdmin } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
@@ -72,6 +106,8 @@ const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [enrolledSubjects, setEnrolledSubjects] = useState<SubjectOption[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<string>("all");
+  const [showTopBanner, setShowTopBanner] = useState(false);
+  const confettiFired = useRef(false);
 
   // Fetch enrolled subjects for the filter
   useEffect(() => {
@@ -103,6 +139,7 @@ const Leaderboard = () => {
 
   // Fetch leaderboard data based on selected subject
   useEffect(() => {
+    confettiFired.current = false;
     const fetchData = async () => {
       setLoading(true);
       const leaderboardPromise = selectedSubject === "all"
@@ -121,9 +158,20 @@ const Leaderboard = () => {
     fetchData();
   }, [selectedSubject]);
 
+  // Fire confetti when user is in top 3
+  useEffect(() => {
+    if (!user || entries.length === 0 || confettiFired.current) return;
+    const rank = entries.findIndex((e) => e.user_id === user.id) + 1;
+    if (rank >= 1 && rank <= 3) {
+      confettiFired.current = true;
+      setShowTopBanner(true);
+      setTimeout(() => fireConfetti(), 500);
+      setTimeout(() => setShowTopBanner(false), 5000);
+    }
+  }, [entries, user]);
+
   const userRank = user ? entries.findIndex((e) => e.user_id === user.id) + 1 : 0;
 
-  // For learners: show top 3 + current user; for admins: show all
   const filterForLearner = (list: LeaderboardEntry[]) => {
     if (isAdmin) return list;
     const top3 = list.slice(0, 3);
@@ -145,13 +193,39 @@ const Leaderboard = () => {
     ? enrolledSubjects.find((s) => s.id === selectedSubject)?.name
     : null;
 
+  const rankLabel = userRank === 1 ? "🥇 1st Place!" : userRank === 2 ? "🥈 2nd Place!" : "🥉 3rd Place!";
+
   return (
     <PageTransition>
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
+
+        {/* Top 3 celebration banner */}
+        <AnimatePresence>
+          {showTopBanner && userRank >= 1 && userRank <= 3 && (
+            <motion.div
+              initial={{ opacity: 0, y: -60 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -60 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-3 py-3 bg-gradient-to-r from-yellow-500/90 via-amber-500/90 to-yellow-500/90 text-white shadow-lg"
+            >
+              <Sparkles className="h-5 w-5 animate-pulse" />
+              <span className="font-bold text-lg">{rankLabel}</span>
+              <span className="text-sm opacity-90">You&apos;re in the top 3!</span>
+              <Sparkles className="h-5 w-5 animate-pulse" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <main className="flex-1 py-16 px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-10">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-center mb-10"
+            >
               <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
                 <Trophy className="h-8 w-8 text-primary" />
               </div>
@@ -161,11 +235,16 @@ const Leaderboard = () => {
                   ? `Rankings for ${subjectName}`
                   : "Track engagement, consistency, and improvement"}
               </p>
-            </div>
+            </motion.div>
 
             {/* Subject Filter */}
             {enrolledSubjects.length > 0 && (
-              <div className="flex items-center justify-center gap-3 mb-8">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="flex items-center justify-center gap-3 mb-8"
+              >
                 <Filter className="h-4 w-4 text-muted-foreground" />
                 <Select value={selectedSubject} onValueChange={setSelectedSubject}>
                   <SelectTrigger className="w-[240px] bg-card border-border">
@@ -178,37 +257,53 @@ const Leaderboard = () => {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </motion.div>
             )}
 
             {/* Stats summary */}
             {entries.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                <div className="bg-card border border-border rounded-lg p-4 text-center shadow-card">
-                  <Users className="h-5 w-5 text-primary mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-foreground">{entries.length}</div>
-                  <p className="text-xs text-muted-foreground">Participants</p>
-                </div>
-                <div className="bg-card border border-border rounded-lg p-4 text-center shadow-card">
-                  <Zap className="h-5 w-5 text-accent mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-foreground">
-                    {entries.reduce((sum, e) => sum + e.weekly_quizzes, 0)}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Quizzes This Week</p>
-                </div>
-                <div className="bg-card border border-border rounded-lg p-4 text-center shadow-card">
-                  <Flame className="h-5 w-5 text-orange-500 mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-foreground">
-                    {Math.max(0, ...entries.map((e) => e.current_streak))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">Best Streak</p>
-                </div>
+                {[
+                  { icon: Users, color: "text-primary", value: entries.length, label: "Participants" },
+                  { icon: Zap, color: "text-accent", value: entries.reduce((sum, e) => sum + e.weekly_quizzes, 0), label: "Quizzes This Week" },
+                  { icon: Flame, color: "text-orange-500", value: Math.max(0, ...entries.map((e) => e.current_streak)), label: "Best Streak" },
+                ].map((stat, idx) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * idx, duration: 0.4 }}
+                    className="bg-card border border-border rounded-lg p-4 text-center shadow-card"
+                  >
+                    <stat.icon className={`h-5 w-5 ${stat.color} mx-auto mb-1`} />
+                    <div className="text-2xl font-bold text-foreground">{stat.value}</div>
+                    <p className="text-xs text-muted-foreground">{stat.label}</p>
+                  </motion.div>
+                ))}
                 {userRank > 0 && (
-                  <div className="bg-card border border-border rounded-lg p-4 text-center shadow-card">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.4 }}
+                    className={`bg-card border border-border rounded-lg p-4 text-center shadow-card ${
+                      userRank <= 3 ? "ring-2 ring-yellow-500/30" : ""
+                    }`}
+                  >
                     <Trophy className="h-5 w-5 text-yellow-500 mx-auto mb-1" />
                     <div className="text-2xl font-bold text-foreground">#{userRank}</div>
                     <p className="text-xs text-muted-foreground">Your Rank</p>
-                  </div>
+                    {userRank <= 3 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.6, type: "spring", stiffness: 400 }}
+                      >
+                        <Badge variant="secondary" className="mt-1 text-[10px] gap-1">
+                          <Sparkles className="h-2.5 w-2.5" /> Top 3
+                        </Badge>
+                      </motion.div>
+                    )}
+                  </motion.div>
                 )}
               </div>
             )}
@@ -224,12 +319,10 @@ const Leaderboard = () => {
                   <TabsTrigger value="badges">Badges</TabsTrigger>
                 </TabsList>
 
-                {/* MOST ENGAGED TAB */}
                 <TabsContent value="engagement">
                   <LeaderboardTable entries={topEngaged} user={user} showWeekly allEntries={[...entries].sort((a, b) => b.weekly_quizzes - a.weekly_quizzes)} />
                 </TabsContent>
 
-                {/* CONSISTENCY TAB */}
                 <TabsContent value="consistency">
                   {consistentLearners.length === 0 ? (
                     <div className="bg-card border border-border rounded-lg p-12 text-center shadow-card">
@@ -241,8 +334,14 @@ const Leaderboard = () => {
                       {consistentLearners.map((entry, i) => {
                         const isCurrentUser = user?.id === entry.user_id;
                         return (
-                          <div key={entry.user_id} className={`flex items-center gap-4 px-4 py-4 ${isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20"}`}>
-                            <div className="flex items-center justify-center w-8">{getRankIcon(i + 1)}</div>
+                          <motion.div
+                            key={entry.user_id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.08, duration: 0.4 }}
+                            className={`flex items-center gap-4 px-4 py-4 ${isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20"}`}
+                          >
+                            <div className="flex items-center justify-center w-8">{getRankIcon(i + 1, i < 3)}</div>
                             <Avatar className="h-10 w-10 shrink-0">
                               <AvatarImage src={entry.avatar_url || undefined} />
                               <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(entry.full_name)}</AvatarFallback>
@@ -263,19 +362,17 @@ const Leaderboard = () => {
                               <div className="text-sm font-semibold text-foreground">{entry.weekly_quizzes} quizzes</div>
                               <div className="text-xs text-muted-foreground">this week</div>
                             </div>
-                          </div>
+                          </motion.div>
                         );
                       })}
                     </div>
                   )}
                 </TabsContent>
 
-                {/* OVERALL SCORES TAB */}
                 <TabsContent value="overall">
                   <LeaderboardTable entries={overallEntries} user={user} showWeekly={false} allEntries={entries} />
                 </TabsContent>
 
-                {/* BADGES TAB */}
                 <TabsContent value="badges">
                   {recentBadges.length === 0 ? (
                     <div className="bg-card border border-border rounded-lg p-12 text-center shadow-card">
@@ -284,12 +381,18 @@ const Leaderboard = () => {
                     </div>
                   ) : (
                     <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden divide-y divide-border">
-                      {recentBadges.map((ub) => {
+                      {recentBadges.map((ub, i) => {
                         const IconComp = iconMap[ub.badges?.icon || "award"] || Award;
                         const isCurrentUser = user?.id === ub.user_id;
                         const entry = entries.find((e) => e.user_id === ub.user_id);
                         return (
-                          <div key={ub.id} className={`flex items-center gap-4 px-4 py-4 ${isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}>
+                          <motion.div
+                            key={ub.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: i * 0.08, duration: 0.4 }}
+                            className={`flex items-center gap-4 px-4 py-4 ${isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}
+                          >
                             <div className="p-2 rounded-lg bg-primary/10">
                               <IconComp className="h-5 w-5 text-primary" />
                             </div>
@@ -303,7 +406,7 @@ const Leaderboard = () => {
                                 {new Date(ub.awarded_at).toLocaleDateString()}
                               </p>
                             </div>
-                          </div>
+                          </motion.div>
                         );
                       })}
                     </div>
@@ -318,7 +421,7 @@ const Leaderboard = () => {
   );
 };
 
-// Reusable leaderboard table
+// Reusable leaderboard table with animations
 const LeaderboardTable = ({
   entries, user, showWeekly, allEntries,
 }: { entries: LeaderboardEntry[]; user: any; showWeekly: boolean; allEntries?: LeaderboardEntry[] }) => {
@@ -347,8 +450,21 @@ const LeaderboardTable = ({
           const actualRank = rankSource.findIndex((e) => e.user_id === entry.user_id) + 1;
           const isCurrentUser = user?.id === entry.user_id;
           const showSeparator = i > 0 && actualRank > (rankSource.findIndex((e) => e.user_id === entries[i - 1].user_id) + 1) + 1;
+          const isTop3 = actualRank <= 3;
+          const glowClass = getRankGlow(actualRank, isCurrentUser);
+
           return (
-            <div key={entry.user_id}>
+            <motion.div
+              key={entry.user_id}
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{
+                delay: i * 0.1,
+                duration: 0.5,
+                type: isTop3 ? "spring" : "tween",
+                stiffness: isTop3 ? 200 : undefined,
+              }}
+            >
               {showSeparator && (
                 <div className="flex items-center justify-center py-2 text-muted-foreground text-xs gap-2">
                   <span className="h-px flex-1 bg-border" />
@@ -357,13 +473,13 @@ const LeaderboardTable = ({
                 </div>
               )}
               <div
-                className={`grid grid-cols-[48px_1fr_80px_80px_100px] sm:grid-cols-[48px_1fr_100px_80px_100px_80px] items-center px-4 py-3 transition-colors ${
+                className={`grid grid-cols-[48px_1fr_80px_80px_100px] sm:grid-cols-[48px_1fr_100px_80px_100px_80px] items-center px-4 py-3 transition-all duration-300 ${
                   isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20"
-                }`}
+                } ${glowClass}`}
               >
-                <div className="flex items-center justify-center">{getRankIcon(actualRank)}</div>
+                <div className="flex items-center justify-center">{getRankIcon(actualRank, isTop3)}</div>
                 <div className="flex items-center gap-3 min-w-0">
-                  <Avatar className="h-8 w-8 shrink-0">
+                  <Avatar className={`h-8 w-8 shrink-0 ${isTop3 && isCurrentUser ? "ring-2 ring-yellow-500/50" : ""}`}>
                     <AvatarImage src={entry.avatar_url || undefined} />
                     <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(entry.full_name)}</AvatarFallback>
                   </Avatar>
@@ -371,6 +487,9 @@ const LeaderboardTable = ({
                     <span className="text-sm font-medium text-foreground truncate block">
                       {entry.full_name}
                       {isCurrentUser && <span className="text-xs text-primary ml-1">(You)</span>}
+                      {isTop3 && isCurrentUser && (
+                        <Sparkles className="inline h-3 w-3 text-yellow-500 ml-1 animate-pulse" />
+                      )}
                     </span>
                     <div className="flex items-center gap-1">
                       {entry.current_streak > 0 && (
@@ -402,7 +521,7 @@ const LeaderboardTable = ({
                   {getTrendIcon(entry.trend)}
                 </div>
               </div>
-            </div>
+            </motion.div>
           );
         })}
       </div>
