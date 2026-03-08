@@ -480,15 +480,39 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
       <Dialog open={dialog} onOpenChange={setDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>{editing ? "Edit Slide" : "Add Slide"}</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-2">
+           <div className="space-y-4 pt-2">
             <div className="space-y-2"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Content (optional text)</Label><Textarea value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} rows={6} /></div>
-            <div className="space-y-2">
-              <Label>Upload File (PDF/PPT)</Label>
-              <Input type="file" accept=".pdf,.ppt,.pptx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              {editing?.file_url && <p className="text-xs text-muted-foreground">Current file: <a href={editing.file_url} target="_blank" className="text-primary hover:underline">View</a></p>}
-            </div>
-            <Button onClick={save} disabled={uploading} className="w-full">
+            <FileDropZone
+              label="Upload File (PDF/PPT)"
+              accept=".pdf,.ppt,.pptx"
+              currentFileUrl={editing?.file_url}
+              onFileSelected={(f) => setFile(f)}
+              onUrlProvided={(url) => { setFile(null); setForm(p => ({ ...p, content: p.content })); (window as any).__slideUrlOverride = url; }}
+            />
+            <Button onClick={async () => {
+              if ((window as any).__slideUrlOverride) {
+                // URL was provided - store directly
+                const urlOverride = (window as any).__slideUrlOverride;
+                delete (window as any).__slideUrlOverride;
+                if (!form.title) { toast({ title: "Title required", variant: "destructive" }); return; }
+                const payload = { title: form.title, content: form.content || null, file_url: urlOverride, subject_id: subjectId, sort_order: editing?.sort_order ?? items.length };
+                if (editing) {
+                  const { error } = await supabase.from("slides").update(payload).eq("id", editing.id);
+                  if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                  setItems((p) => p.map((n) => (n.id === editing.id ? { ...n, ...payload } : n)));
+                } else {
+                  const { data, error } = await supabase.from("slides").insert(payload).select().single();
+                  if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+                  setItems((p) => [...p, data]);
+                }
+                toast({ title: editing ? "Slide updated" : "Slide created" });
+                setDialog(false);
+                setFile(null);
+              } else {
+                save();
+              }
+            }} disabled={uploading} className="w-full">
               {uploading ? "Uploading…" : <><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Create"} Slide</>}
             </Button>
           </div>
