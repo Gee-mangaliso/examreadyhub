@@ -136,6 +136,7 @@ const SuggestionManager = () => {
             _metadata: { content_type: contentType, content_id: selectedContent },
           });
         }
+        playSend();
         toast({ title: `Suggestion sent to ${userIds.length} students!` });
         setMessage("");
         setSelectedContent("");
