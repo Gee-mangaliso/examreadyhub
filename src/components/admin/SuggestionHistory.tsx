@@ -134,9 +134,14 @@ const SuggestionHistory = () => {
           <h2 className="text-xl font-heading text-foreground">Sent Suggestions History</h2>
           <Badge variant="secondary" className="ml-2">{suggestions.length} total</Badge>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchSuggestions} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
+            <Download className="h-4 w-4 mr-1" /> Export CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={fetchSuggestions} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
