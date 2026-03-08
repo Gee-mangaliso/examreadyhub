@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import ExamLockdownViewer from "./ExamLockdownViewer";
 
 const PROVINCES = [
   "Common Papers",
@@ -63,7 +64,7 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
   const [scoreInput, setScoreInput] = useState("");
   const [totalMarksInput, setTotalMarksInput] = useState("100");
   const [submitting, setSubmitting] = useState(false);
-
+  const [activePaper, setActivePaper] = useState<ExamPaper | null>(null);
   // Fetch papers for subject + province
   useEffect(() => {
     if (!selectedProvince) { setPapers([]); setLoading(false); return; }
@@ -232,13 +233,8 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
                           {/* Clickable paper row */}
                           <button
                             onClick={() => {
-                              if (paper.file_url) {
-                                window.open(paper.file_url, "_blank");
-                              }
                               if (!completion) {
-                                setScoreDialog(paper);
-                                setScoreInput("");
-                                setTotalMarksInput("100");
+                                setActivePaper(paper);
                               }
                             }}
                             className="w-full text-left p-4 flex items-center gap-3 cursor-pointer"
@@ -264,8 +260,10 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
                                 )}
                               </div>
                             </div>
-                            {paper.file_url && (
-                              <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
+                            {!completion && paper.file_url && (
+                              <Badge variant="outline" className="text-[10px] gap-0.5 text-primary shrink-0">
+                                <FileText className="h-2.5 w-2.5" /> Open
+                              </Badge>
                             )}
                           </button>
 
@@ -300,41 +298,31 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
         </div>
       )}
 
-      {/* Score submission dialog */}
-      <Dialog open={!!scoreDialog} onOpenChange={(o) => !o && setScoreDialog(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Submit Your Score</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground mb-4">{scoreDialog?.title}</p>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Your Score</label>
-              <Input
-                type="number"
-                min={0}
-                value={scoreInput}
-                onChange={(e) => setScoreInput(e.target.value)}
-                placeholder="e.g. 65"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">Total Marks</label>
-              <Input
-                type="number"
-                min={1}
-                value={totalMarksInput}
-                onChange={(e) => setTotalMarksInput(e.target.value)}
-                placeholder="e.g. 100"
-              />
-            </div>
-            <Button onClick={submitScore} disabled={submitting} className="w-full">
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <CheckCircle className="h-4 w-4 mr-1" />}
-              Submit Score
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Lockdown Exam Viewer */}
+      {activePaper && (
+        <ExamLockdownViewer
+          paper={activePaper}
+          onClose={() => setActivePaper(null)}
+          alreadyCompleted={!!completions[activePaper.id]}
+          onSubmitScore={async (score, totalMarks) => {
+            if (!user) return;
+            const { error } = await supabase.from("exam_completions").upsert(
+              { user_id: user.id, exam_paper_id: activePaper.id, score, total_marks: totalMarks },
+              { onConflict: "user_id,exam_paper_id" }
+            );
+            if (error) {
+              toast({ title: "Error", description: error.message, variant: "destructive" });
+            } else {
+              setCompletions((prev) => ({
+                ...prev,
+                [activePaper.id]: { exam_paper_id: activePaper.id, score, total_marks: totalMarks },
+              }));
+              toast({ title: "Score recorded!", description: `${score}/${totalMarks} saved.` });
+              setActivePaper(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };
