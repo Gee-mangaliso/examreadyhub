@@ -67,16 +67,20 @@ const SubjectDetail = () => {
   useEffect(() => {
     if (!subjectId) return;
     const fetchContent = async () => {
-      const [notesRes, slidesRes, examplesRes, quizzesRes, examsRes] = await Promise.all([
+      const [notesRes, slidesRes, examplesRes, textbooksRes, guidesRes, quizzesRes, examsRes] = await Promise.all([
         supabase.from("notes").select("*").eq("subject_id", subjectId).order("sort_order"),
         supabase.from("slides").select("*").eq("subject_id", subjectId).order("sort_order"),
         supabase.from("worked_examples").select("*").eq("subject_id", subjectId).order("sort_order"),
+        supabase.from("textbooks").select("*").eq("subject_id", subjectId).order("sort_order"),
+        supabase.from("study_guides").select("*").eq("subject_id", subjectId).order("sort_order"),
         supabase.from("quizzes").select("*").eq("subject_id", subjectId).eq("type", "quiz").order("created_at"),
         supabase.from("quizzes").select("*").eq("subject_id", subjectId).eq("type", "exam").order("created_at"),
       ]);
       if (notesRes.data) setNotes(notesRes.data);
       if (slidesRes.data) setSlides(slidesRes.data);
       if (examplesRes.data) setExamples(examplesRes.data);
+      if (textbooksRes.data) setTextbooks(textbooksRes.data as any);
+      if (guidesRes.data) setStudyGuides(guidesRes.data as any);
       if (quizzesRes.data) setQuizzes(quizzesRes.data);
       if (examsRes.data) setExams(examsRes.data);
     };
