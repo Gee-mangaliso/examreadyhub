@@ -265,6 +265,10 @@ const AdminDashboard = () => {
                 </div>
               </TabsContent>
 
+              <TabsContent value="suggestions">
+                <SuggestionManager />
+              </TabsContent>
+
               <TabsContent value="badges">
                 <BadgeManager />
               </TabsContent>
