@@ -62,16 +62,38 @@ const AdminDashboard = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [attempts, setAttempts] = useState<StudentAttempt[]>([]);
   const [attemptsLoading, setAttemptsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("content");
+
+  // Activity guide stats
+  const [guideCounts, setGuideCounts] = useState({ subjects: 0, newStudents: 0, badges: 0, pendingFeedback: 0, pendingMemos: 0, pendingTestimonials: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
-      const [studentsRes, statsRes] = await Promise.all([
+      const [studentsRes, statsRes, subjectsRes, feedbackRes, memosRes, testimonialsRes, badgesRes] = await Promise.all([
         supabase.rpc("admin_get_all_students"),
         supabase.rpc("admin_get_platform_stats"),
+        supabase.from("subjects").select("id", { count: "exact", head: true }),
+        supabase.from("feedback").select("id", { count: "exact", head: true }),
+        supabase.from("memo_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("testimonials").select("id", { count: "exact", head: true }).eq("approved", false),
+        supabase.from("badges").select("id", { count: "exact", head: true }),
       ]);
       if (studentsRes.data) setStudents(studentsRes.data as Student[]);
       if (statsRes.data && (statsRes.data as PlatformStats[]).length > 0)
         setStats((statsRes.data as PlatformStats[])[0]);
+
+      const allStudents = studentsRes.data as Student[] || [];
+      const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+      const newStudents = allStudents.filter(s => new Date(s.created_at) >= weekAgo).length;
+
+      setGuideCounts({
+        subjects: subjectsRes.count || 0,
+        newStudents,
+        badges: badgesRes.count || 0,
+        pendingFeedback: feedbackRes.count || 0,
+        pendingMemos: memosRes.count || 0,
+        pendingTestimonials: testimonialsRes.count || 0,
+      });
       setLoading(false);
     };
     fetchData();
