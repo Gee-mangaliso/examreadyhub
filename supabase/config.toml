@@ -2,3 +2,12 @@ project_id = "ysxlvwxwlljxtjncwtjh"
 
 [functions.chat]
 verify_jwt = false
+
+[functions.delete-user]
+verify_jwt = false
+
+[functions.award-weekly-badges]
+verify_jwt = false
+
+[functions.snapshot-leaderboard]
+verify_jwt = false

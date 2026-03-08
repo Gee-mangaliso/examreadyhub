@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Users, BarChart3, TrendingUp, Activity, Eye, Search,
   ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen, Sparkles, SearchIcon, FileText,
-  ArrowRight, Star
+  ArrowRight, Star, ShieldAlert
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ import FeedbackManager from "@/components/admin/FeedbackManager";
 import TestimonialManager from "@/components/admin/TestimonialManager";
 import RatingsViewer from "@/components/admin/RatingsViewer";
 import StudentActions from "@/components/admin/StudentActions";
+import RestrictionsOverview from "@/components/admin/RestrictionsOverview";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
@@ -291,6 +292,7 @@ const AdminDashboard = () => {
                 <TabsTrigger value="feedback" className="gap-1.5"><Activity className="h-4 w-4" />Feedback</TabsTrigger>
                 <TabsTrigger value="testimonials" className="gap-1.5"><Eye className="h-4 w-4" />Testimonials</TabsTrigger>
                 <TabsTrigger value="ratings" className="gap-1.5"><Star className="h-4 w-4" />Ratings</TabsTrigger>
+                <TabsTrigger value="restrictions" className="gap-1.5"><ShieldAlert className="h-4 w-4" />Restrictions</TabsTrigger>
               </TabsList>
 
               <TabsContent value="content">
@@ -393,6 +395,10 @@ const AdminDashboard = () => {
 
               <TabsContent value="ratings">
                 <RatingsViewer />
+              </TabsContent>
+
+              <TabsContent value="restrictions">
+                <RestrictionsOverview />
               </TabsContent>
             </Tabs>
           </div>
