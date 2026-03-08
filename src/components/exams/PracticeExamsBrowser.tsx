@@ -53,12 +53,12 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [selectedProvince, setSelectedProvince] = useState("Common Papers");
+  const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [papers, setPapers] = useState<ExamPaper[]>([]);
   const [completions, setCompletions] = useState<Record<string, Completion>>({});
   const [memoRequests, setMemoRequests] = useState<Record<string, MemoRequest>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [scoreDialog, setScoreDialog] = useState<ExamPaper | null>(null);
   const [scoreInput, setScoreInput] = useState("");
   const [totalMarksInput, setTotalMarksInput] = useState("100");
