@@ -102,6 +102,29 @@ const SuggestionHistory = () => {
 
   const readCount = suggestions.filter((s) => s.read).length;
   const unreadCount = suggestions.filter((s) => !s.read).length;
+  const repliedCount = suggestions.filter((s) => s.reply).length;
+
+  const exportCSV = () => {
+    const headers = ["Student", "Content", "Type", "Subject", "Message", "Reply", "Status", "Sent"];
+    const rows = filtered.map((s) => [
+      s.student_name || "",
+      s.content_title,
+      s.content_type.replace("_", " "),
+      s.subject_name || "",
+      s.message || "",
+      s.reply || "",
+      s.read ? "Read" : "Unread",
+      format(new Date(s.created_at), "yyyy-MM-dd HH:mm"),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `suggestions-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-4">
