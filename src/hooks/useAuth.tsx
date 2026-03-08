@@ -2,12 +2,20 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+interface BanInfo {
+  is_banned: boolean;
+  reason?: string;
+  ends_at?: string | null;
+}
+
 interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: { full_name: string; avatar_url: string | null; grade: string | null } | null;
   isAdmin: boolean;
   loading: boolean;
+  banInfo: BanInfo | null;
+  restrictions: any[];
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
