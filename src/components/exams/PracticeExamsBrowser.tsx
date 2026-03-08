@@ -327,6 +327,42 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
           }}
         />
       )}
+
+      {/* Read-only paper review */}
+      {reviewPaper && (
+        <div className="fixed inset-0 z-[100] bg-background flex flex-col">
+          <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <FileText className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">{reviewPaper.title}</h2>
+                <p className="text-xs text-muted-foreground">{reviewPaper.province} · {reviewPaper.term} · {reviewPaper.year}</p>
+              </div>
+              {completions[reviewPaper.id] && (
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  {completions[reviewPaper.id].score}/{completions[reviewPaper.id].total_marks} ({Math.round((completions[reviewPaper.id].score / completions[reviewPaper.id].total_marks) * 100)}%)
+                </Badge>
+              )}
+            </div>
+            <Button size="sm" variant="outline" onClick={() => setReviewPaper(null)}>
+              Close
+            </Button>
+          </div>
+          <div className="flex-1 overflow-hidden">
+            {reviewPaper.file_url ? (
+              <iframe src={reviewPaper.file_url} className="w-full h-full border-0" title={reviewPaper.title} />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                <FileText className="h-16 w-16 opacity-30 mb-4" />
+                <p>No PDF available for this paper.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
