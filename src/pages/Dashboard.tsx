@@ -244,6 +244,7 @@ const Dashboard = () => {
               <RecentActivity />
               <QuizHistory />
               <SuggestionsPanel />
+              <RateExperience />
             </div>
           </div>
         </main>
