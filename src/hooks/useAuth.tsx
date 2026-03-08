@@ -52,6 +52,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       _role: "admin",
     });
     setIsAdmin(roleData === true);
+
+    // Check for active bans and restrictions
+    const { data: restrictionsData } = await supabase
+      .from("user_restrictions")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("is_active", true);
+
+    const now = new Date();
+    const active = (restrictionsData || []).filter((r: any) =>
+      !r.ends_at || new Date(r.ends_at) > now
+    );
+
+    const activeBan = active.find((r: any) => r.restriction_type === "ban");
+    if (activeBan) {
+      setBanInfo({
+        is_banned: true,
+        reason: activeBan.reason,
+        ends_at: activeBan.ends_at,
+      });
+    } else {
+      setBanInfo(null);
+    }
+
+    setRestrictions(active.filter((r: any) => r.restriction_type === "content_restriction"));
   };
 
   useEffect(() => {
