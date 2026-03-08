@@ -18,6 +18,7 @@ import PageTransition from "@/components/PageTransition";
 import ContentManager from "@/components/admin/ContentManager";
 import BadgeManager from "@/components/admin/BadgeManager";
 import SuggestionManager from "@/components/admin/SuggestionManager";
+import SuggestionHistory from "@/components/admin/SuggestionHistory";
 import SearchAnalytics from "@/components/admin/SearchAnalytics";
 import MemoRequestManager from "@/components/admin/MemoRequestManager";
 import { supabase } from "@/integrations/supabase/client";
@@ -273,8 +274,9 @@ const AdminDashboard = () => {
                 <SearchAnalytics />
               </TabsContent>
 
-              <TabsContent value="suggestions">
+              <TabsContent value="suggestions" className="space-y-8">
                 <SuggestionManager />
+                <SuggestionHistory />
               </TabsContent>
 
               <TabsContent value="badges">

@@ -11,6 +11,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { playSend, playError } from "@/lib/sounds";
 
 interface Student { user_id: string; full_name: string; email: string }
 interface ContentItem { id: string; title: string; type: string; subject_name: string; subject_id?: string }
@@ -72,16 +73,19 @@ const SuggestionManager = () => {
 
   const sendSuggestion = async () => {
     if (!selectedContent || !contentType || !user) {
+      playError();
       toast({ title: "Please fill all required fields", variant: "destructive" });
       return;
     }
 
     if (!bulkMode && !selectedStudent) {
+      playError();
       toast({ title: "Please select a student", variant: "destructive" });
       return;
     }
 
     if (bulkMode && !selectedSubject) {
+      playError();
       toast({ title: "Please select a subject for bulk send", variant: "destructive" });
       return;
     }
@@ -132,6 +136,7 @@ const SuggestionManager = () => {
             _metadata: { content_type: contentType, content_id: selectedContent },
           });
         }
+        playSend();
         toast({ title: `Suggestion sent to ${userIds.length} students!` });
         setMessage("");
         setSelectedContent("");
@@ -158,6 +163,7 @@ const SuggestionManager = () => {
           _message: `Your admin recommended: "${item.title}" (${item.subject_name})`,
           _metadata: { content_type: contentType, content_id: selectedContent },
         });
+        playSend();
         toast({ title: "Suggestion sent!" });
         setMessage("");
         setSelectedContent("");
