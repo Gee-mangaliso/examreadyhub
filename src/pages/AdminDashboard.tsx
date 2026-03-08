@@ -19,6 +19,7 @@ import ContentManager from "@/components/admin/ContentManager";
 import BadgeManager from "@/components/admin/BadgeManager";
 import SuggestionManager from "@/components/admin/SuggestionManager";
 import SearchAnalytics from "@/components/admin/SearchAnalytics";
+import MemoRequestManager from "@/components/admin/MemoRequestManager";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
