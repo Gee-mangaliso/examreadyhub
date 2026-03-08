@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      badges: {
+        Row: {
+          badge_type: string
+          created_at: string
+          criteria_value: number | null
+          description: string | null
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          badge_type?: string
+          created_at?: string
+          criteria_value?: number | null
+          description?: string | null
+          icon?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          badge_type?: string
+          created_at?: string
+          criteria_value?: number | null
+          description?: string | null
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       grades: {
         Row: {
           created_at: string
@@ -193,6 +223,7 @@ export type Database = {
           subject_id: string
           time_limit_minutes: number | null
           title: string
+          type: string
         }
         Insert: {
           created_at?: string
@@ -201,6 +232,7 @@ export type Database = {
           subject_id: string
           time_limit_minutes?: number | null
           title: string
+          type?: string
         }
         Update: {
           created_at?: string
@@ -209,10 +241,52 @@ export type Database = {
           subject_id?: string
           time_limit_minutes?: number | null
           title?: string
+          type?: string
         }
         Relationships: [
           {
             foreignKeyName: "quizzes_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      slides: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          sort_order: number
+          subject_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          sort_order?: number
+          subject_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          sort_order?: number
+          subject_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slides_subject_id_fkey"
             columns: ["subject_id"]
             isOneToOne: false
             referencedRelation: "subjects"
@@ -296,6 +370,41 @@ export type Database = {
           },
         ]
       }
+      user_badges: {
+        Row: {
+          awarded_at: string
+          awarded_by: string | null
+          badge_id: string
+          id: string
+          user_id: string
+          week_start: string | null
+        }
+        Insert: {
+          awarded_at?: string
+          awarded_by?: string | null
+          badge_id: string
+          id?: string
+          user_id: string
+          week_start?: string | null
+        }
+        Update: {
+          awarded_at?: string
+          awarded_by?: string | null
+          badge_id?: string
+          id?: string
+          user_id?: string
+          week_start?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -336,6 +445,47 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_subjects_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      worked_examples: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          sort_order: number
+          subject_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          sort_order?: number
+          subject_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          sort_order?: number
+          subject_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "worked_examples_subject_id_fkey"
             columns: ["subject_id"]
             isOneToOne: false
             referencedRelation: "subjects"
@@ -386,6 +536,24 @@ export type Database = {
           score: number
           subject_name: string
           total_questions: number
+        }[]
+      }
+      get_enhanced_leaderboard: {
+        Args: { limit_count?: number }
+        Returns: {
+          avatar_url: string
+          avg_percentage: number
+          badge_count: number
+          current_streak: number
+          full_name: string
+          prev_weekly_avg: number
+          quizzes_taken: number
+          total_questions: number
+          total_score: number
+          trend: string
+          user_id: string
+          weekly_avg: number
+          weekly_quizzes: number
         }[]
       }
       get_leaderboard: {
