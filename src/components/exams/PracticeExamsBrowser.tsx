@@ -64,7 +64,7 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
   const [scoreInput, setScoreInput] = useState("");
   const [totalMarksInput, setTotalMarksInput] = useState("100");
   const [submitting, setSubmitting] = useState(false);
-
+  const [activePaper, setActivePaper] = useState<ExamPaper | null>(null);
   // Fetch papers for subject + province
   useEffect(() => {
     if (!selectedProvince) { setPapers([]); setLoading(false); return; }
