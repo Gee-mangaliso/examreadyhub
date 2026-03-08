@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { History, CheckCircle2, Circle, RefreshCw, Search, Filter } from "lucide-react";
+import { History, CheckCircle2, Circle, RefreshCw, Search, Filter, Download, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,8 @@ interface Suggestion {
   read: boolean;
   created_at: string;
   student_name?: string;
+  reply: string | null;
+  replied_at: string | null;
 }
 
 const SuggestionHistory = () => {
@@ -100,6 +102,29 @@ const SuggestionHistory = () => {
 
   const readCount = suggestions.filter((s) => s.read).length;
   const unreadCount = suggestions.filter((s) => !s.read).length;
+  const repliedCount = suggestions.filter((s) => s.reply).length;
+
+  const exportCSV = () => {
+    const headers = ["Student", "Content", "Type", "Subject", "Message", "Reply", "Status", "Sent"];
+    const rows = filtered.map((s) => [
+      s.student_name || "",
+      s.content_title,
+      s.content_type.replace("_", " "),
+      s.subject_name || "",
+      s.message || "",
+      s.reply || "",
+      s.read ? "Read" : "Unread",
+      format(new Date(s.created_at), "yyyy-MM-dd HH:mm"),
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `suggestions-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="space-y-4">
@@ -109,9 +134,14 @@ const SuggestionHistory = () => {
           <h2 className="text-xl font-heading text-foreground">Sent Suggestions History</h2>
           <Badge variant="secondary" className="ml-2">{suggestions.length} total</Badge>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchSuggestions} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV} disabled={filtered.length === 0}>
+            <Download className="h-4 w-4 mr-1" /> Export CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={fetchSuggestions} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -121,6 +151,9 @@ const SuggestionHistory = () => {
         </div>
         <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Circle className="h-3.5 w-3.5 text-muted-foreground" /> {unreadCount} unread
+        </div>
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <MessageSquare className="h-3.5 w-3.5 text-blue-500" /> {repliedCount} replied
         </div>
       </div>
 
@@ -177,6 +210,7 @@ const SuggestionHistory = () => {
                 <TableHead>Type</TableHead>
                 <TableHead>Subject</TableHead>
                 <TableHead>Message</TableHead>
+                <TableHead>Reply</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead>Sent</TableHead>
               </TableRow>
@@ -194,6 +228,15 @@ const SuggestionHistory = () => {
                   <TableCell className="text-muted-foreground">{s.subject_name || "—"}</TableCell>
                   <TableCell className="text-muted-foreground text-sm max-w-[150px] truncate">
                     {s.message || "—"}
+                  </TableCell>
+                  <TableCell className="text-sm max-w-[150px] truncate">
+                    {s.reply ? (
+                      <span className="text-blue-600 dark:text-blue-400" title={`Replied ${s.replied_at ? format(new Date(s.replied_at), "MMM d, HH:mm") : ""}`}>
+                        "{s.reply}"
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     {s.read ? (

@@ -23,6 +23,8 @@ export type Database = {
           id: string
           message: string | null
           read: boolean
+          replied_at: string | null
+          reply: string | null
           subject_name: string | null
           suggested_by: string
           user_id: string
@@ -35,6 +37,8 @@ export type Database = {
           id?: string
           message?: string | null
           read?: boolean
+          replied_at?: string | null
+          reply?: string | null
           subject_name?: string | null
           suggested_by: string
           user_id: string
@@ -47,6 +51,8 @@ export type Database = {
           id?: string
           message?: string | null
           read?: boolean
+          replied_at?: string | null
+          reply?: string | null
           subject_name?: string | null
           suggested_by?: string
           user_id?: string

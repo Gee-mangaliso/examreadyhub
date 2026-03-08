@@ -21,6 +21,7 @@ import Leaderboard from "./pages/Leaderboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
+import AIChatbot from "./components/AIChatbot";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <AnimatedRoutes />
+            <AIChatbot />
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
