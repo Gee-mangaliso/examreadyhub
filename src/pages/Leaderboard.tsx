@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Trophy, Medal, Crown, Users, TrendingUp, TrendingDown, Minus,
-  Flame, Zap, Award, Filter, Sparkles,
+  Flame, Zap, Award, Filter, Sparkles, History,
 } from "lucide-react";
+import WeeklyComparison from "@/components/leaderboard/WeeklyComparison";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -317,6 +318,9 @@ const Leaderboard = () => {
                   <TabsTrigger value="consistency">Consistency</TabsTrigger>
                   <TabsTrigger value="overall">Overall Scores</TabsTrigger>
                   <TabsTrigger value="badges">Badges</TabsTrigger>
+                  <TabsTrigger value="history" className="gap-1">
+                    <History className="h-3.5 w-3.5" /> History
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="engagement">
@@ -411,6 +415,10 @@ const Leaderboard = () => {
                       })}
                     </div>
                   )}
+                </TabsContent>
+
+                <TabsContent value="history">
+                  <WeeklyComparison />
                 </TabsContent>
               </Tabs>
             )}

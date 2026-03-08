@@ -83,6 +83,30 @@ export type Database = {
         }
         Relationships: []
       }
+      content_views: {
+        Row: {
+          content_id: string
+          content_type: string
+          id: string
+          user_id: string
+          viewed_at: string
+        }
+        Insert: {
+          content_id: string
+          content_type?: string
+          id?: string
+          user_id: string
+          viewed_at?: string
+        }
+        Update: {
+          content_id?: string
+          content_type?: string
+          id?: string
+          user_id?: string
+          viewed_at?: string
+        }
+        Relationships: []
+      }
       grades: {
         Row: {
           created_at: string
@@ -104,6 +128,48 @@ export type Database = {
           id?: string
           name?: string
           sort_order?: number
+        }
+        Relationships: []
+      }
+      leaderboard_snapshots: {
+        Row: {
+          avg_percentage: number
+          created_at: string
+          current_streak: number
+          id: string
+          rank: number
+          total_questions: number
+          total_score: number
+          user_id: string
+          week_start: string
+          weekly_avg: number | null
+          weekly_quizzes: number
+        }
+        Insert: {
+          avg_percentage?: number
+          created_at?: string
+          current_streak?: number
+          id?: string
+          rank: number
+          total_questions?: number
+          total_score?: number
+          user_id: string
+          week_start: string
+          weekly_avg?: number | null
+          weekly_quizzes?: number
+        }
+        Update: {
+          avg_percentage?: number
+          created_at?: string
+          current_streak?: number
+          id?: string
+          rank?: number
+          total_questions?: number
+          total_score?: number
+          user_id?: string
+          week_start?: string
+          weekly_avg?: number | null
+          weekly_quizzes?: number
         }
         Relationships: []
       }
