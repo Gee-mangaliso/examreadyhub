@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   MapPin, Calendar, FileText, CheckCircle, Send, Download,
-  ChevronDown, ChevronUp, Loader2, ClipboardList,
+  ChevronDown, ChevronUp, Loader2, ClipboardList, ExternalLink, Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
