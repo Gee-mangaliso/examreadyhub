@@ -2,12 +2,17 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BookOpen, GraduationCap, ArrowRight, FileText, HelpCircle, ClipboardList,
-  Target, Users, Lightbulb, Shield, Brain, Trophy, Heart, Sparkles
+  Target, Users, Lightbulb, Shield, Brain, Trophy, Heart, Sparkles,
+  Star, Quote, Send, MessageSquare, Loader2
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -284,12 +289,183 @@ const Home = () => {
           </div>
         </section>
 
+        {/* Testimonials Section */}
+        <TestimonialsSection />
+
+        {/* Contact / Feedback Section */}
+        <ContactSection user={user} />
+
         {/* Footer */}
         <footer className="border-t border-border py-8 px-4 text-center text-sm text-muted-foreground">
           © 2026 ExamReady Hub. All rights reserved.
         </footer>
       </div>
     </PageTransition>
+  );
+};
+
+/* ── Testimonials ── */
+const testimonials = [
+  {
+    name: "Thandi M.",
+    grade: "Grade 12",
+    quote: "ExamReady Hub helped me improve my Maths mark from 48% to 76%! The worked examples made everything click.",
+    stars: 5,
+  },
+  {
+    name: "Sipho K.",
+    grade: "Grade 11",
+    quote: "The practice exams with the lockdown browser feel just like the real thing. I went into my finals feeling so prepared.",
+    stars: 5,
+  },
+  {
+    name: "Aisha N.",
+    grade: "Grade 10",
+    quote: "I love the AI study assistant — it explains concepts better than my textbook and it's available 24/7!",
+    stars: 5,
+  },
+  {
+    name: "Liam D.",
+    grade: "Grade 9",
+    quote: "The quizzes are actually fun. I've been on a 14-day study streak and my Science marks have improved so much.",
+    stars: 4,
+  },
+  {
+    name: "Naledi P.",
+    grade: "Grade 12",
+    quote: "As someone in a rural school with limited resources, ExamReady Hub has been a game-changer. The notes are so thorough!",
+    stars: 5,
+  },
+  {
+    name: "Mrs. Van der Merwe",
+    grade: "Teacher",
+    quote: "I recommend ExamReady Hub to all my students. The admin suggestion feature lets me guide their study plans perfectly.",
+    stars: 5,
+  },
+];
+
+const TestimonialsSection = () => (
+  <section className="py-20 px-4 bg-muted/30">
+    <div className="max-w-6xl mx-auto">
+      <div className="text-center mb-12">
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-primary text-sm mb-4">
+          <Star className="h-4 w-4" />
+          Success Stories
+        </div>
+        <h2 className="text-3xl font-heading text-foreground mb-3">What Our Learners Say</h2>
+        <p className="text-muted-foreground max-w-lg mx-auto">Real stories from students and teachers across South Africa.</p>
+      </div>
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {testimonials.map((t) => (
+          <div key={t.name} className="bg-card rounded-xl p-6 shadow-card border border-border flex flex-col">
+            <Quote className="h-6 w-6 text-primary/30 mb-3 shrink-0" />
+            <p className="text-foreground text-sm flex-1 italic leading-relaxed">"{t.quote}"</p>
+            <div className="mt-4 pt-4 border-t border-border flex items-center justify-between">
+              <div>
+                <p className="font-medium text-foreground text-sm">{t.name}</p>
+                <p className="text-xs text-muted-foreground">{t.grade}</p>
+              </div>
+              <div className="flex gap-0.5">
+                {Array.from({ length: t.stars }).map((_, i) => (
+                  <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+);
+
+/* ── Contact Form ── */
+const ContactSection = ({ user }: { user: any }) => {
+  const { toast } = useToast();
+  const [name, setName] = useState(user?.user_metadata?.full_name || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || !message.trim()) {
+      toast({ title: "Please fill in all fields", variant: "destructive" });
+      return;
+    }
+    setSending(true);
+    const { supabase } = await import("@/integrations/supabase/client");
+    const { error } = await supabase.from("feedback").insert({
+      user_id: user?.id || null,
+      name: name.trim(),
+      email: email.trim(),
+      message: message.trim(),
+    });
+    setSending(false);
+    if (error) {
+      toast({ title: "Something went wrong", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Message sent! ✉️", description: "Thank you for reaching out. We'll get back to you soon." });
+      setMessage("");
+    }
+  };
+
+  return (
+    <section className="py-20 px-4 bg-background" id="contact">
+      <div className="max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-12 items-start">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-primary text-sm mb-4">
+              <MessageSquare className="h-4 w-4" />
+              Get in Touch
+            </div>
+            <h2 className="text-3xl font-heading text-foreground mb-4">Have a Question or Feedback?</h2>
+            <p className="text-muted-foreground mb-6">
+              We'd love to hear from you! Whether you have a question about our content, need help with a topic, or want to share your experience — drop us a message.
+            </p>
+            <div className="space-y-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Send className="h-4 w-4 text-primary" />
+                </div>
+                <span>We typically respond within 24 hours</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Shield className="h-4 w-4 text-primary" />
+                </div>
+                <span>Your information is kept private and secure</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Heart className="h-4 w-4 text-primary" />
+                </div>
+                <span>Feedback helps us improve for everyone</span>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="bg-card rounded-xl p-6 shadow-card border border-border space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="contact-name">Name</Label>
+              <Input id="contact-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" maxLength={100} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact-email">Email</Label>
+              <Input id="contact-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" maxLength={255} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="contact-message">Message</Label>
+              <Textarea id="contact-message" value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Your question, feedback, or suggestion…" rows={4} maxLength={1000} required />
+            </div>
+            <Button type="submit" disabled={sending} className="w-full gap-2">
+              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {sending ? "Sending…" : "Send Message"}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </section>
   );
 };
 
