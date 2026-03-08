@@ -848,7 +848,9 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
     }
     let fileUrl = editing?.file_url || null;
 
-    if (file) {
+    if (urlOverride) {
+      fileUrl = urlOverride;
+    } else if (file) {
       setUploading(true);
       const ext = file.name.split(".").pop();
       const path = `exam-papers/${subjectId}/${Date.now()}.${ext}`;
