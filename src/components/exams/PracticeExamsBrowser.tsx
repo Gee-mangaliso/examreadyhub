@@ -227,11 +227,26 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
                       return (
                         <div
                           key={paper.id}
-                          className="bg-card border border-border rounded-lg p-4 shadow-card flex flex-col sm:flex-row sm:items-center gap-3"
+                          className="bg-card border border-border rounded-lg shadow-card overflow-hidden hover:border-primary/30 hover:shadow-md transition-all"
                         >
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
-                            <FileText className="h-5 w-5 text-primary shrink-0" />
-                            <div className="min-w-0">
+                          {/* Clickable paper row */}
+                          <button
+                            onClick={() => {
+                              if (paper.file_url) {
+                                window.open(paper.file_url, "_blank");
+                              }
+                              if (!completion) {
+                                setScoreDialog(paper);
+                                setScoreInput("");
+                                setTotalMarksInput("100");
+                              }
+                            }}
+                            className="w-full text-left p-4 flex items-center gap-3 cursor-pointer"
+                          >
+                            <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                              <FileText className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-foreground truncate">{paper.title}</p>
                               <div className="flex items-center gap-2 mt-0.5">
                                 <Badge variant="secondary" className="text-[10px]">{paper.term}</Badge>
@@ -242,41 +257,40 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
                                     {completion.score}/{completion.total_marks} ({pct}%)
                                   </Badge>
                                 )}
+                                {!completion && (
+                                  <Badge variant="outline" className="text-[10px] gap-0.5 text-primary">
+                                    <Play className="h-2.5 w-2.5" /> Write Exam
+                                  </Badge>
+                                )}
                               </div>
                             </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0">
                             {paper.file_url && (
-                              <Button asChild size="sm" variant="outline">
-                                <a href={paper.file_url} target="_blank" rel="noopener noreferrer">
-                                  <Download className="h-3.5 w-3.5 mr-1" /> Paper
-                                </a>
-                              </Button>
+                              <ExternalLink className="h-4 w-4 text-muted-foreground shrink-0" />
                             )}
+                          </button>
 
-                            {!completion ? (
-                              <Button size="sm" onClick={() => { setScoreDialog(paper); setScoreInput(""); setTotalMarksInput("100"); }}>
-                                <CheckCircle className="h-3.5 w-3.5 mr-1" /> Submit Score
-                              </Button>
-                            ) : !memo ? (
-                              <Button size="sm" variant="outline" onClick={() => requestMemo(paper)}>
-                                <Send className="h-3.5 w-3.5 mr-1" /> Request Memo
-                              </Button>
-                            ) : memo.status === "pending" ? (
-                              <Badge variant="secondary" className="text-xs">Memo Pending</Badge>
-                            ) : memo.status === "sent" && memo.memo_url ? (
-                              <Button asChild size="sm" variant="outline">
-                                <a href={memo.memo_url} target="_blank" rel="noopener noreferrer">
-                                  <Download className="h-3.5 w-3.5 mr-1" /> Memo
-                                </a>
-                              </Button>
-                            ) : memo.status === "sent" ? (
-                              <Badge variant="secondary" className="text-xs text-green-600">Memo Sent</Badge>
-                            ) : (
-                              <Badge variant="destructive" className="text-xs">Declined</Badge>
-                            )}
-                          </div>
+                          {/* Action bar for completed papers */}
+                          {completion && (
+                            <div className="border-t border-border px-4 py-2 flex items-center justify-end gap-2 bg-muted/20">
+                              {!memo ? (
+                                <Button size="sm" variant="outline" onClick={() => requestMemo(paper)}>
+                                  <Send className="h-3.5 w-3.5 mr-1" /> Request Memo
+                                </Button>
+                              ) : memo.status === "pending" ? (
+                                <Badge variant="secondary" className="text-xs">Memo Pending</Badge>
+                              ) : memo.status === "sent" && memo.memo_url ? (
+                                <Button asChild size="sm" variant="outline">
+                                  <a href={memo.memo_url} target="_blank" rel="noopener noreferrer">
+                                    <Download className="h-3.5 w-3.5 mr-1" /> View Memo
+                                  </a>
+                                </Button>
+                              ) : memo.status === "sent" ? (
+                                <Badge variant="secondary" className="text-xs text-green-600">Memo Sent</Badge>
+                              ) : (
+                                <Badge variant="destructive" className="text-xs">Declined</Badge>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
