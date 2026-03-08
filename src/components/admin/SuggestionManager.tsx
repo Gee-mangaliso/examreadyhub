@@ -73,6 +73,7 @@ const SuggestionManager = () => {
 
   const sendSuggestion = async () => {
     if (!selectedContent || !contentType || !user) {
+      playError();
       toast({ title: "Please fill all required fields", variant: "destructive" });
       return;
     }
