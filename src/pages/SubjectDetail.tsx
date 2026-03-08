@@ -26,6 +26,8 @@ const getSections = (loggedIn: boolean) => [
 interface Note { id: string; title: string; content: string | null; sort_order: number }
 interface Slide { id: string; title: string; content: string | null; file_url: string | null; sort_order: number }
 interface WorkedExample { id: string; title: string; content: string | null; file_url: string | null; sort_order: number }
+interface Textbook { id: string; title: string; description: string | null; file_url: string | null; sort_order: number }
+interface StudyGuide { id: string; title: string; content: string | null; file_url: string | null; sort_order: number }
 interface Quiz { id: string; title: string; description: string | null; time_limit_minutes: number | null; type: string }
 interface QuizQuestion { id: string; question: string; options: string[]; correct_answer: string; explanation: string | null; sort_order: number }
 
