@@ -166,7 +166,27 @@ const SubjectDetail = () => {
                           className="w-full text-left px-6 py-4 flex items-center gap-3 hover:bg-muted/30 transition-colors"
                         >
                           <BookOpen className="h-5 w-5 text-primary shrink-0" />
-                          <span className="font-medium text-foreground">{note.title}</span>
+                          <span className="font-medium text-foreground flex-1">{note.title}</span>
+                          {note.content && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="shrink-0 h-8 w-8 p-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const blob = new Blob([`# ${note.title}\n\n${note.content}`], { type: "text/markdown" });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement("a");
+                                a.href = url;
+                                a.download = `${note.title.replace(/\s+/g, "-")}.md`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                              title="Download note"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          )}
                         </button>
                         {expandedNote === note.id && note.content && (
                           <div className="px-6 pb-6 border-t border-border pt-4 prose prose-sm max-w-none text-foreground">
