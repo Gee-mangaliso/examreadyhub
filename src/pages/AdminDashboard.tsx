@@ -267,6 +267,10 @@ const AdminDashboard = () => {
                 </div>
               </TabsContent>
 
+              <TabsContent value="analytics">
+                <SearchAnalytics />
+              </TabsContent>
+
               <TabsContent value="suggestions">
                 <SuggestionManager />
               </TabsContent>

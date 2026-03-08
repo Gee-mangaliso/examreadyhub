@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Bell, Trophy, BookOpen, Flame, Info, Check } from "lucide-react";
+import { Bell, Trophy, BookOpen, Flame, Info, Check, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   Popover,
   PopoverContent,
