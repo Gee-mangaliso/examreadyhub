@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { User, Plus, X, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
@@ -34,7 +34,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const Dashboard = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const { toast } = useToast();
   const [grades, setGrades] = useState<Grade[]>([]);
   const [selectedGrade, setSelectedGrade] = useState<string>("");
@@ -111,6 +111,9 @@ const Dashboard = () => {
     acc[key].subjects.push(us);
     return acc;
   }, {});
+
+  // Redirect admins to admin dashboard
+  if (isAdmin) return <Navigate to="/admin" replace />;
 
   return (
     <PageTransition>
