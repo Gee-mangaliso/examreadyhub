@@ -771,4 +771,185 @@ const QuizContentEditor = ({ subjectId, type }: { subjectId: string; type: "quiz
   );
 };
 
+// ============ Exam Papers Editor (PDF Upload) ============
+const PROVINCES = [
+  "Common Papers", "Eastern Cape", "Free State", "Gauteng", "KwaZulu-Natal",
+  "Limpopo", "Mpumalanga", "North West", "Northern Cape", "Western Cape",
+];
+const TERMS = ["Term 1", "Term 2", "Term 3", "Term 4"];
+const YEARS = Array.from({ length: 8 }, (_, i) => 2025 - i);
+
+const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
+  const { toast } = useToast();
+  const [papers, setPapers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialog, setDialog] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [form, setForm] = useState({ title: "", province: "", term: "", year: "2025" });
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    supabase.from("exam_papers").select("*").eq("subject_id", subjectId).order("year", { ascending: false }).order("term")
+      .then(({ data }) => { setPapers(data || []); setLoading(false); });
+  }, [subjectId]);
+
+  const save = async () => {
+    if (!form.title || !form.province || !form.term || !form.year) {
+      toast({ title: "All fields are required", variant: "destructive" }); return;
+    }
+    let fileUrl = editing?.file_url || null;
+
+    if (file) {
+      setUploading(true);
+      const ext = file.name.split(".").pop();
+      const path = `exam-papers/${subjectId}/${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("content-files").upload(path, file);
+      if (uploadErr) { toast({ title: "Upload failed", description: uploadErr.message, variant: "destructive" }); setUploading(false); return; }
+      const { data: urlData } = supabase.storage.from("content-files").getPublicUrl(path);
+      fileUrl = urlData.publicUrl;
+      setUploading(false);
+    }
+
+    const payload = {
+      title: form.title,
+      province: form.province,
+      term: form.term,
+      year: parseInt(form.year),
+      file_url: fileUrl,
+      subject_id: subjectId,
+    };
+
+    if (editing) {
+      const { error } = await supabase.from("exam_papers").update(payload).eq("id", editing.id);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      setPapers((p) => p.map((ep) => (ep.id === editing.id ? { ...ep, ...payload } : ep)));
+    } else {
+      const { data, error } = await supabase.from("exam_papers").insert(payload).select().single();
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      setPapers((p) => [data, ...p]);
+    }
+    toast({ title: editing ? "Exam paper updated" : "Exam paper added" });
+    setDialog(false);
+    setFile(null);
+  };
+
+  const remove = async (id: string) => {
+    await supabase.from("exam_papers").delete().eq("id", id);
+    setPapers((p) => p.filter((ep) => ep.id !== id));
+    toast({ title: "Exam paper deleted" });
+  };
+
+  if (loading) return <div className="p-4 text-muted-foreground">Loading exam papers…</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-muted-foreground">{papers.length} exam papers</span>
+        <Button size="sm" onClick={() => {
+          setEditing(null);
+          setForm({ title: "", province: "", term: "", year: "2025" });
+          setFile(null);
+          setDialog(true);
+        }} className="gap-1">
+          <Plus className="h-3 w-3" /> Add Exam Paper
+        </Button>
+      </div>
+
+      {papers.map((paper) => (
+        <div key={paper.id} className="bg-card border border-border rounded-lg p-4 flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium text-foreground">{paper.title}</h4>
+            <div className="flex flex-wrap gap-1.5 mt-1">
+              <Badge variant="secondary" className="text-xs">{paper.province}</Badge>
+              <Badge variant="outline" className="text-xs">{paper.term}</Badge>
+              <Badge variant="outline" className="text-xs">{paper.year}</Badge>
+              {paper.file_url ? (
+                <Badge variant="default" className="text-xs gap-0.5"><Upload className="h-2.5 w-2.5" /> PDF</Badge>
+              ) : (
+                <Badge variant="destructive" className="text-xs">No file</Badge>
+              )}
+            </div>
+          </div>
+          <div className="flex gap-1">
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => {
+              setEditing(paper);
+              setForm({ title: paper.title, province: paper.province, term: paper.term, year: String(paper.year) });
+              setFile(null);
+              setDialog(true);
+            }}>
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => remove(paper.id)}>
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      ))}
+
+      {papers.length === 0 && (
+        <div className="text-center py-8 text-muted-foreground">
+          <Upload className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <p>No exam papers uploaded yet.</p>
+          <p className="text-xs mt-1">Upload past papers so learners can practice in lockdown mode.</p>
+        </div>
+      )}
+
+      <Dialog open={dialog} onOpenChange={setDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>{editing ? "Edit Exam Paper" : "Add Exam Paper"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>Title</Label>
+              <Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} placeholder="e.g. Physical Sciences P1 June 2024" />
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label>Province</Label>
+                <select
+                  className="w-full border border-border rounded-md p-2 bg-background text-foreground text-sm"
+                  value={form.province}
+                  onChange={(e) => setForm((p) => ({ ...p, province: e.target.value }))}
+                >
+                  <option value="">Select…</option>
+                  {PROVINCES.map((pr) => <option key={pr} value={pr}>{pr}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Term</Label>
+                <select
+                  className="w-full border border-border rounded-md p-2 bg-background text-foreground text-sm"
+                  value={form.term}
+                  onChange={(e) => setForm((p) => ({ ...p, term: e.target.value }))}
+                >
+                  <option value="">Select…</option>
+                  {TERMS.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>Year</Label>
+                <select
+                  className="w-full border border-border rounded-md p-2 bg-background text-foreground text-sm"
+                  value={form.year}
+                  onChange={(e) => setForm((p) => ({ ...p, year: e.target.value }))}
+                >
+                  {YEARS.map((y) => <option key={y} value={String(y)}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Upload PDF</Label>
+              <Input type="file" accept=".pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} />
+              {editing?.file_url && <p className="text-xs text-muted-foreground">Current file: <a href={editing.file_url} target="_blank" className="text-primary hover:underline">View PDF</a></p>}
+            </div>
+            <Button onClick={save} disabled={uploading} className="w-full">
+              {uploading ? "Uploading…" : <><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Add"} Exam Paper</>}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 export default ContentManager;
