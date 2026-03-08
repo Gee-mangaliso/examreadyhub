@@ -2,12 +2,17 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   BookOpen, GraduationCap, ArrowRight, FileText, HelpCircle, ClipboardList,
-  Target, Users, Lightbulb, Shield, Brain, Trophy, Heart, Sparkles
+  Target, Users, Lightbulb, Shield, Brain, Trophy, Heart, Sparkles,
+  Star, Quote, Send, MessageSquare, Loader2
 } from "lucide-react";
 import * as Icons from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
