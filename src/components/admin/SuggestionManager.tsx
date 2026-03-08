@@ -163,6 +163,7 @@ const SuggestionManager = () => {
           _message: `Your admin recommended: "${item.title}" (${item.subject_name})`,
           _metadata: { content_type: contentType, content_id: selectedContent },
         });
+        playSend();
         toast({ title: "Suggestion sent!" });
         setMessage("");
         setSelectedContent("");
