@@ -901,6 +901,7 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
           setEditing(null);
           setForm({ title: "", province: "", term: "", year: "2025" });
           setFile(null);
+          setUrlOverride(null);
           setDialog(true);
         }} className="gap-1">
           <Plus className="h-3 w-3" /> Add Exam Paper
