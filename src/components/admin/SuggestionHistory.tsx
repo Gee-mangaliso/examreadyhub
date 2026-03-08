@@ -210,6 +210,7 @@ const SuggestionHistory = () => {
                 <TableHead>Type</TableHead>
                 <TableHead>Subject</TableHead>
                 <TableHead>Message</TableHead>
+                <TableHead>Reply</TableHead>
                 <TableHead className="text-center">Status</TableHead>
                 <TableHead>Sent</TableHead>
               </TableRow>
