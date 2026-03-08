@@ -989,11 +989,13 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
                 </select>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Upload PDF</Label>
-              <Input type="file" accept=".pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              {editing?.file_url && <p className="text-xs text-muted-foreground">Current file: <a href={editing.file_url} target="_blank" className="text-primary hover:underline">View PDF</a></p>}
-            </div>
+            <FileDropZone
+              label="Upload PDF"
+              accept=".pdf"
+              currentFileUrl={editing?.file_url}
+              onFileSelected={(f) => { setFile(f); setUrlOverride(null); }}
+              onUrlProvided={(url) => { setUrlOverride(url); setFile(null); }}
+            />
             <Button onClick={save} disabled={uploading} className="w-full">
               {uploading ? "Uploading…" : <><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Add"} Exam Paper</>}
             </Button>
