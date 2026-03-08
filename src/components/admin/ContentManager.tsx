@@ -405,6 +405,7 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ title: "", content: "" });
   const [file, setFile] = useState<File | null>(null);
+  const [urlOverride, setUrlOverride] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -416,7 +417,9 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
     if (!form.title) { toast({ title: "Title required", variant: "destructive" }); return; }
     let fileUrl = editing?.file_url || null;
 
-    if (file) {
+    if (urlOverride) {
+      fileUrl = urlOverride;
+    } else if (file) {
       setUploading(true);
       const ext = file.name.split(".").pop();
       const path = `slides/${subjectId}/${Date.now()}.${ext}`;
@@ -440,6 +443,7 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
     toast({ title: editing ? "Slide updated" : "Slide created" });
     setDialog(false);
     setFile(null);
+    setUrlOverride(null);
   };
 
   const remove = async (id: string) => {
@@ -454,7 +458,7 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="text-sm text-muted-foreground">{items.length} slides</span>
-        <Button size="sm" onClick={() => { setEditing(null); setForm({ title: "", content: "" }); setFile(null); setDialog(true); }} className="gap-1">
+        <Button size="sm" onClick={() => { setEditing(null); setForm({ title: "", content: "" }); setFile(null); setUrlOverride(null); setDialog(true); }} className="gap-1">
           <Plus className="h-3 w-3" /> Add Slide
         </Button>
       </div>
@@ -468,7 +472,7 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
             {n.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.content.slice(0, 150)}…</p>}
           </div>
           <div className="flex gap-1">
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditing(n); setForm({ title: n.title, content: n.content || "" }); setFile(null); setDialog(true); }}>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditing(n); setForm({ title: n.title, content: n.content || "" }); setFile(null); setUrlOverride(null); setDialog(true); }}>
               <Pencil className="h-3 w-3" />
             </Button>
             <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => remove(n.id)}>
@@ -480,39 +484,17 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
       <Dialog open={dialog} onOpenChange={setDialog}>
         <DialogContent className="max-w-2xl">
           <DialogHeader><DialogTitle>{editing ? "Edit Slide" : "Add Slide"}</DialogTitle></DialogHeader>
-           <div className="space-y-4 pt-2">
+          <div className="space-y-4 pt-2">
             <div className="space-y-2"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Content (optional text)</Label><Textarea value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} rows={6} /></div>
             <FileDropZone
               label="Upload File (PDF/PPT)"
               accept=".pdf,.ppt,.pptx"
               currentFileUrl={editing?.file_url}
-              onFileSelected={(f) => setFile(f)}
-              onUrlProvided={(url) => { setFile(null); setForm(p => ({ ...p, content: p.content })); (window as any).__slideUrlOverride = url; }}
+              onFileSelected={(f) => { setFile(f); setUrlOverride(null); }}
+              onUrlProvided={(url) => { setUrlOverride(url); setFile(null); }}
             />
-            <Button onClick={async () => {
-              if ((window as any).__slideUrlOverride) {
-                // URL was provided - store directly
-                const urlOverride = (window as any).__slideUrlOverride;
-                delete (window as any).__slideUrlOverride;
-                if (!form.title) { toast({ title: "Title required", variant: "destructive" }); return; }
-                const payload = { title: form.title, content: form.content || null, file_url: urlOverride, subject_id: subjectId, sort_order: editing?.sort_order ?? items.length };
-                if (editing) {
-                  const { error } = await supabase.from("slides").update(payload).eq("id", editing.id);
-                  if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-                  setItems((p) => p.map((n) => (n.id === editing.id ? { ...n, ...payload } : n)));
-                } else {
-                  const { data, error } = await supabase.from("slides").insert(payload).select().single();
-                  if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-                  setItems((p) => [...p, data]);
-                }
-                toast({ title: editing ? "Slide updated" : "Slide created" });
-                setDialog(false);
-                setFile(null);
-              } else {
-                save();
-              }
-            }} disabled={uploading} className="w-full">
+            <Button onClick={save} disabled={uploading} className="w-full">
               {uploading ? "Uploading…" : <><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Create"} Slide</>}
             </Button>
           </div>
