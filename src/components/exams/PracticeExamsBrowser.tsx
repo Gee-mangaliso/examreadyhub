@@ -233,13 +233,8 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
                           {/* Clickable paper row */}
                           <button
                             onClick={() => {
-                              if (paper.file_url) {
-                                window.open(paper.file_url, "_blank");
-                              }
                               if (!completion) {
-                                setScoreDialog(paper);
-                                setScoreInput("");
-                                setTotalMarksInput("100");
+                                setActivePaper(paper);
                               }
                             }}
                             className="w-full text-left p-4 flex items-center gap-3 cursor-pointer"
