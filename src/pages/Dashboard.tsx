@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { User, BarChart3, Clock, Trophy, Sparkles, Plus, X, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList } from "lucide-react";
+import { User, Plus, X, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
 import * as Icons from "lucide-react";
 import Header from "@/components/Header";
@@ -15,6 +15,12 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import DashboardSearch from "@/components/dashboard/DashboardSearch";
+import PerformanceSummary from "@/components/dashboard/PerformanceSummary";
+import RecentActivity from "@/components/dashboard/RecentActivity";
+import QuizHistory from "@/components/dashboard/QuizHistory";
+import SuggestionsPanel from "@/components/dashboard/SuggestionsPanel";
+import RecentlyAddedContent from "@/components/dashboard/RecentlyAddedContent";
 
 interface Grade { id: string; name: string; sort_order: number }
 interface Subject { id: string; name: string; icon: string | null; grade_id: string }
@@ -36,6 +42,7 @@ const Dashboard = () => {
   const [mySubjects, setMySubjects] = useState<UserSubject[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [recentContent, setRecentContent] = useState<any[]>([]);
 
   const fetchMySubjects = async () => {
     if (!user) return;
@@ -73,6 +80,29 @@ const Dashboard = () => {
     fetchMySubjects();
   };
 
+  // Build search data
+  const searchSubjects = mySubjects.map((us) => {
+    const grade = grades.find((g) => g.id === us.subjects?.grade_id);
+    return {
+      id: us.subjects?.id || "",
+      name: us.subjects?.name || "",
+      icon: us.subjects?.icon || null,
+      grade_id: us.subjects?.grade_id || "",
+      gradeName: grade?.name || "",
+      gradeNum: grade?.name?.replace("Grade ", "") || "",
+    };
+  });
+
+  const searchContent = recentContent.map((c) => {
+    const us = mySubjects.find((s) => s.subject_id === c.subject_id);
+    const grade = grades.find((g) => g.id === us?.subjects?.grade_id);
+    return {
+      ...c,
+      gradeNum: grade?.name?.replace("Grade ", "") || "",
+      subjectName: us?.subjects?.name || "",
+    };
+  });
+
   // Group subjects by grade
   const groupedSubjects = mySubjects.reduce<Record<string, { gradeName: string; subjects: UserSubject[] }>>((acc, us) => {
     const grade = grades.find(g => g.id === us.subjects?.grade_id);
@@ -101,8 +131,10 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Study Streak */}
             <StudyStreak />
+
+            {/* Search */}
+            <DashboardSearch subjects={searchSubjects} contentItems={searchContent} />
 
             {/* My Subjects */}
             <div className="flex items-center justify-between mb-6">
@@ -199,135 +231,19 @@ const Dashboard = () => {
               </div>
             )}
 
-            {/* Recently Added Content */}
-            <RecentlyAddedContent mySubjects={mySubjects} />
+            <RecentlyAddedContent mySubjects={mySubjects} onContentLoaded={setRecentContent} />
 
-            {/* Stats cards */}
+            {/* Stats grid */}
             <div className="grid sm:grid-cols-2 gap-6 mt-10">
-              {[
-                { title: "Performance Summary", icon: BarChart3, desc: "Your scores and progress will appear here." },
-                { title: "Recent Activity", icon: Clock, desc: "Your recent study sessions will appear here." },
-                { title: "Quiz History", icon: Trophy, desc: "Past quiz results will appear here." },
-                { title: "Suggestions", icon: Sparkles, desc: "Personalised study recommendations will appear here." },
-              ].map((c) => (
-                <div key={c.title} className="bg-card border border-border rounded-lg p-6 shadow-card space-y-3 min-h-[180px]">
-                  <div className="flex items-center gap-2 text-foreground">
-                    <c.icon className="h-5 w-5 text-primary" />
-                    <h2 className="font-heading text-lg">{c.title}</h2>
-                  </div>
-                  <p className="text-muted-foreground text-sm">{c.desc}</p>
-                </div>
-              ))}
+              <PerformanceSummary />
+              <RecentActivity />
+              <QuizHistory />
+              <SuggestionsPanel />
             </div>
           </div>
         </main>
       </div>
     </PageTransition>
-  );
-};
-
-const contentTypeIcons: Record<string, typeof FileText> = {
-  note: FileText,
-  slide: Presentation,
-  worked_example: Lightbulb,
-  quiz: HelpCircle,
-  exam: ClipboardList,
-};
-
-const contentTypeLabels: Record<string, string> = {
-  note: "Note",
-  slide: "Slide",
-  worked_example: "Worked Example",
-  quiz: "Quiz",
-  exam: "Practice Exam",
-};
-
-interface RecentContent {
-  id: string;
-  title: string;
-  type: string;
-  created_at: string;
-  subject_name?: string;
-}
-
-const RecentlyAddedContent = ({ mySubjects }: { mySubjects: UserSubject[] }) => {
-  const [items, setItems] = useState<RecentContent[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (mySubjects.length === 0) { setLoading(false); return; }
-
-    const subjectIds = mySubjects.map((s) => s.subject_id);
-    const subjectNameMap = mySubjects.reduce<Record<string, string>>((acc, s) => {
-      acc[s.subject_id] = s.subjects?.name || "Unknown";
-      return acc;
-    }, {});
-
-    const fetchRecent = async () => {
-      const [notesRes, slidesRes, examplesRes, quizzesRes] = await Promise.all([
-        supabase.from("notes").select("id, title, created_at, subject_id").in("subject_id", subjectIds).order("created_at", { ascending: false }).limit(5),
-        supabase.from("slides").select("id, title, created_at, subject_id").in("subject_id", subjectIds).order("created_at", { ascending: false }).limit(5),
-        supabase.from("worked_examples").select("id, title, created_at, subject_id").in("subject_id", subjectIds).order("created_at", { ascending: false }).limit(5),
-        supabase.from("quizzes").select("id, title, created_at, subject_id, type").in("subject_id", subjectIds).order("created_at", { ascending: false }).limit(5),
-      ]);
-
-      const all: RecentContent[] = [
-        ...(notesRes.data || []).map((n) => ({ id: n.id, title: n.title, type: "note", created_at: n.created_at, subject_name: subjectNameMap[n.subject_id] })),
-        ...(slidesRes.data || []).map((s) => ({ id: s.id, title: s.title, type: "slide", created_at: s.created_at, subject_name: subjectNameMap[s.subject_id] })),
-        ...(examplesRes.data || []).map((e) => ({ id: e.id, title: e.title, type: "worked_example", created_at: e.created_at, subject_name: subjectNameMap[e.subject_id] })),
-        ...(quizzesRes.data || []).map((q) => ({ id: q.id, title: q.title, type: q.type || "quiz", created_at: q.created_at, subject_name: subjectNameMap[q.subject_id] })),
-      ];
-
-      all.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      setItems(all.slice(0, 8));
-      setLoading(false);
-    };
-
-    fetchRecent();
-  }, [mySubjects]);
-
-  if (loading) return null;
-  if (items.length === 0) return null;
-
-  const formatTimeAgo = (dateStr: string) => {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "Just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    if (days < 7) return `${days}d ago`;
-    return new Date(dateStr).toLocaleDateString();
-  };
-
-  return (
-    <div className="mt-10">
-      <h2 className="text-xl font-heading text-foreground mb-4 flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" /> Recently Added
-      </h2>
-      <div className="grid sm:grid-cols-2 gap-3">
-        {items.map((item) => {
-          const Icon = contentTypeIcons[item.type] || FileText;
-          return (
-            <div key={`${item.type}-${item.id}`} className="bg-card border border-border rounded-lg p-4 shadow-card flex items-center gap-3 hover:border-primary/30 transition-colors">
-              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                <Icon className="h-4 w-4 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-muted-foreground">{contentTypeLabels[item.type]}</span>
-                  <span className="text-xs text-muted-foreground">·</span>
-                  <span className="text-xs text-muted-foreground">{item.subject_name}</span>
-                </div>
-              </div>
-              <span className="text-[10px] text-muted-foreground/60 shrink-0">{formatTimeAgo(item.created_at)}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
   );
 };
 

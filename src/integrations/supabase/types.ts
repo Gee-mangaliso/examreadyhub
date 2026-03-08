@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_suggestions: {
+        Row: {
+          content_id: string
+          content_title: string
+          content_type: string
+          created_at: string
+          id: string
+          message: string | null
+          read: boolean
+          subject_name: string | null
+          suggested_by: string
+          user_id: string
+        }
+        Insert: {
+          content_id: string
+          content_title: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          read?: boolean
+          subject_name?: string | null
+          suggested_by: string
+          user_id: string
+        }
+        Update: {
+          content_id?: string
+          content_title?: string
+          content_type?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          read?: boolean
+          subject_name?: string | null
+          suggested_by?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       badges: {
         Row: {
           badge_type: string

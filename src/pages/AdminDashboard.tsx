@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Users, BarChart3, TrendingUp, Activity, Eye, Search,
-  ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen
+  ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen, Sparkles
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import ContentManager from "@/components/admin/ContentManager";
 import BadgeManager from "@/components/admin/BadgeManager";
+import SuggestionManager from "@/components/admin/SuggestionManager";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
@@ -187,6 +188,7 @@ const AdminDashboard = () => {
               <TabsList className="flex flex-wrap h-auto gap-1">
                 <TabsTrigger value="content" className="gap-1.5"><FolderOpen className="h-4 w-4" />Content</TabsTrigger>
                 <TabsTrigger value="students" className="gap-1.5"><Users className="h-4 w-4" />Students</TabsTrigger>
+                <TabsTrigger value="suggestions" className="gap-1.5"><Sparkles className="h-4 w-4" />Suggestions</TabsTrigger>
                 <TabsTrigger value="badges" className="gap-1.5"><Award className="h-4 w-4" />Badges</TabsTrigger>
               </TabsList>
 
@@ -261,6 +263,10 @@ const AdminDashboard = () => {
                     </Table>
                   )}
                 </div>
+              </TabsContent>
+
+              <TabsContent value="suggestions">
+                <SuggestionManager />
               </TabsContent>
 
               <TabsContent value="badges">
