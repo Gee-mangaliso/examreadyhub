@@ -189,6 +189,38 @@ const AdminDashboard = () => {
               <p className="text-muted-foreground mt-1">Manage content, students, and badges</p>
             </div>
 
+            {/* Admin Activity Guide */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="bg-card border border-border rounded-lg p-4 shadow-card space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10"><FolderOpen className="h-5 w-5 text-primary" /></div>
+                  <h3 className="font-heading text-sm text-foreground">Manage Content</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">Add or edit subjects, notes, slides, study guides, textbooks, worked examples, quizzes, and exam papers.</p>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-4 shadow-card space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10"><Users className="h-5 w-5 text-primary" /></div>
+                  <h3 className="font-heading text-sm text-foreground">Monitor Students</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">View student registrations, quiz performance, and identify learners who may need extra support.</p>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-4 shadow-card space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10"><Award className="h-5 w-5 text-primary" /></div>
+                  <h3 className="font-heading text-sm text-foreground">Award Badges</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">Create badges and award them to top-performing learners to boost motivation and engagement.</p>
+              </div>
+              <div className="bg-card border border-border rounded-lg p-4 shadow-card space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10"><Activity className="h-5 w-5 text-primary" /></div>
+                  <h3 className="font-heading text-sm text-foreground">Review Feedback</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">Read student feedback, approve testimonials, respond to memo requests, and send study suggestions.</p>
+              </div>
+            </div>
+
             <Tabs defaultValue="content" className="space-y-6">
               <TabsList className="flex flex-wrap h-auto gap-1">
                 <TabsTrigger value="content" className="gap-1.5"><FolderOpen className="h-4 w-4" />Content</TabsTrigger>

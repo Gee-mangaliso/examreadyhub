@@ -331,9 +331,11 @@ const ProfileSettings = () => {
               <Button variant="outline" className="w-full gap-2" onClick={() => setSignOutOpen(true)}>
                 <LogOut className="h-4 w-4" /> Sign Out
               </Button>
-              <Button variant="destructive" className="w-full gap-2" onClick={() => setDeleteOpen(true)}>
-                <Trash2 className="h-4 w-4" /> Delete Account
-              </Button>
+              {!isAdmin && (
+                <Button variant="destructive" className="w-full gap-2" onClick={() => setDeleteOpen(true)}>
+                  <Trash2 className="h-4 w-4" /> Delete Account
+                </Button>
+              )}
             </div>
           </div>
         </main>
