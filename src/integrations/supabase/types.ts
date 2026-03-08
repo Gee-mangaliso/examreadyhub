@@ -348,6 +348,46 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_all_students: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          avg_percentage: number
+          created_at: string
+          email: string
+          full_name: string
+          grade: string
+          last_quiz_at: string
+          subjects_enrolled: number
+          total_questions: number
+          total_quizzes_taken: number
+          total_score: number
+          user_id: string
+        }[]
+      }
+      admin_get_platform_stats: {
+        Args: never
+        Returns: {
+          active_this_week: number
+          active_today: number
+          avg_score: number
+          total_quiz_attempts: number
+          total_students: number
+        }[]
+      }
+      admin_get_student_attempts: {
+        Args: { _student_id: string }
+        Returns: {
+          attempt_id: string
+          completed_at: string
+          grade_name: string
+          percentage: number
+          quiz_title: string
+          score: number
+          subject_name: string
+          total_questions: number
+        }[]
+      }
       get_leaderboard: {
         Args: { limit_count?: number }
         Returns: {
