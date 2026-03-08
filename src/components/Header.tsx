@@ -20,6 +20,7 @@ const Header = () => {
       { to: "/dashboard", label: "Dashboard" },
       { to: "/profile", label: "Profile" },
     ] : []),
+    ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
   ];
 
   const handleSignOut = async () => {

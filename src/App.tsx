@@ -38,6 +38,7 @@ const AnimatedRoutes = () => {
         <Route path="/subject-progress/:subjectId" element={<ProtectedRoute><SubjectProgress /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
         <Route path="/leaderboard" element={<Leaderboard />} />
+        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
