@@ -259,6 +259,7 @@ const SubjectContentEditor = ({ subjectId }: { subjectId: string }) => {
         <TabsTrigger value="notes" className="flex items-center gap-1.5 text-sm"><FileText className="h-4 w-4" />Notes</TabsTrigger>
         <TabsTrigger value="slides" className="flex items-center gap-1.5 text-sm"><Presentation className="h-4 w-4" />Slides</TabsTrigger>
         <TabsTrigger value="examples" className="flex items-center gap-1.5 text-sm"><Lightbulb className="h-4 w-4" />Examples</TabsTrigger>
+        <TabsTrigger value="study-guides" className="flex items-center gap-1.5 text-sm"><BookOpen className="h-4 w-4" />Study Guides</TabsTrigger>
         <TabsTrigger value="quizzes" className="flex items-center gap-1.5 text-sm"><HelpCircle className="h-4 w-4" />Quizzes</TabsTrigger>
         <TabsTrigger value="exams" className="flex items-center gap-1.5 text-sm"><ClipboardList className="h-4 w-4" />Exams</TabsTrigger>
         <TabsTrigger value="exam-papers" className="flex items-center gap-1.5 text-sm"><Upload className="h-4 w-4" />Exam Papers</TabsTrigger>
@@ -272,6 +273,9 @@ const SubjectContentEditor = ({ subjectId }: { subjectId: string }) => {
       </TabsContent>
       <TabsContent value="examples" className="mt-4">
         <ExamplesEditor subjectId={subjectId} />
+      </TabsContent>
+      <TabsContent value="study-guides" className="mt-4">
+        <StudyGuidesEditor subjectId={subjectId} />
       </TabsContent>
       <TabsContent value="quizzes" className="mt-4">
         <QuizContentEditor subjectId={subjectId} type="quiz" />
@@ -612,6 +616,114 @@ const ExamplesEditor = ({ subjectId }: { subjectId: string }) => {
   );
 };
 
+// ============ Study Guides Editor ============
+const StudyGuidesEditor = ({ subjectId }: { subjectId: string }) => {
+  const { toast } = useToast();
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialog, setDialog] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [form, setForm] = useState({ title: "", content: "" });
+  const [file, setFile] = useState<File | null>(null);
+  const [urlOverride, setUrlOverride] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    supabase.from("study_guides").select("*").eq("subject_id", subjectId).order("sort_order")
+      .then(({ data }) => { setItems(data || []); setLoading(false); });
+  }, [subjectId]);
+
+  const save = async () => {
+    if (!form.title) { toast({ title: "Title required", variant: "destructive" }); return; }
+    let fileUrl = editing?.file_url || null;
+
+    if (urlOverride) {
+      fileUrl = urlOverride;
+    } else if (file) {
+      setUploading(true);
+      const ext = file.name.split(".").pop();
+      const path = `study-guides/${subjectId}/${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("content-files").upload(path, file);
+      if (uploadErr) { toast({ title: "Upload failed", description: uploadErr.message, variant: "destructive" }); setUploading(false); return; }
+      const { data: urlData } = supabase.storage.from("content-files").getPublicUrl(path);
+      fileUrl = urlData.publicUrl;
+      setUploading(false);
+    }
+
+    const payload = { title: form.title, content: form.content || null, file_url: fileUrl, subject_id: subjectId, sort_order: editing?.sort_order ?? items.length };
+    if (editing) {
+      const { error } = await supabase.from("study_guides").update(payload).eq("id", editing.id);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      setItems((p) => p.map((n) => (n.id === editing.id ? { ...n, ...payload } : n)));
+    } else {
+      const { data, error } = await supabase.from("study_guides").insert(payload).select().single();
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      setItems((p) => [...p, data]);
+    }
+    toast({ title: editing ? "Study guide updated" : "Study guide created" });
+    setDialog(false);
+    setFile(null);
+    setUrlOverride(null);
+  };
+
+  const remove = async (id: string) => {
+    await supabase.from("study_guides").delete().eq("id", id);
+    setItems((p) => p.filter((n) => n.id !== id));
+    toast({ title: "Study guide deleted" });
+  };
+
+  if (loading) return <div className="p-4 text-muted-foreground">Loading study guides…</div>;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <span className="text-sm text-muted-foreground">{items.length} study guides</span>
+        <Button size="sm" onClick={() => { setEditing(null); setForm({ title: "", content: "" }); setFile(null); setUrlOverride(null); setDialog(true); }} className="gap-1">
+          <Plus className="h-3 w-3" /> Add Study Guide
+        </Button>
+      </div>
+      {items.map((n) => (
+        <div key={n.id} className="bg-card border border-border rounded-lg p-4 flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-medium text-foreground flex items-center gap-2">
+              {n.title}
+              {n.file_url && <Badge variant="secondary" className="text-xs">File</Badge>}
+            </h4>
+            {n.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.content.slice(0, 150)}…</p>}
+          </div>
+          <div className="flex gap-1">
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditing(n); setForm({ title: n.title, content: n.content || "" }); setFile(null); setUrlOverride(null); setDialog(true); }}>
+              <Pencil className="h-3 w-3" />
+            </Button>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => remove(n.id)}>
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+      ))}
+      <Dialog open={dialog} onOpenChange={setDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader><DialogTitle>{editing ? "Edit Study Guide" : "Add Study Guide"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} /></div>
+            <div className="space-y-2"><Label>Content (Markdown supported)</Label><Textarea value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} rows={10} className="font-mono text-sm" /></div>
+            <FileDropZone
+              label="Upload File (PDF/DOC)"
+              accept=".pdf,.doc,.docx"
+              currentFileUrl={editing?.file_url}
+              onFileSelected={(f) => { setFile(f); setUrlOverride(null); }}
+              onUrlProvided={(url) => { setUrlOverride(url); setFile(null); }}
+            />
+            <Button onClick={save} disabled={uploading} className="w-full">
+              {uploading ? "Uploading…" : <><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Create"} Study Guide</>}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
 // ============ Quiz/Exam Content Editor ============
 const QuizContentEditor = ({ subjectId, type }: { subjectId: string; type: "quiz" | "exam" }) => {
   const { toast } = useToast();
@@ -834,6 +946,7 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ title: "", province: "", term: "", year: "2025" });
   const [file, setFile] = useState<File | null>(null);
+  const [urlOverride, setUrlOverride] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -847,7 +960,9 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
     }
     let fileUrl = editing?.file_url || null;
 
-    if (file) {
+    if (urlOverride) {
+      fileUrl = urlOverride;
+    } else if (file) {
       setUploading(true);
       const ext = file.name.split(".").pop();
       const path = `exam-papers/${subjectId}/${Date.now()}.${ext}`;
@@ -879,6 +994,7 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
     toast({ title: editing ? "Exam paper updated" : "Exam paper added" });
     setDialog(false);
     setFile(null);
+    setUrlOverride(null);
   };
 
   const remove = async (id: string) => {
@@ -897,6 +1013,7 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
           setEditing(null);
           setForm({ title: "", province: "", term: "", year: "2025" });
           setFile(null);
+          setUrlOverride(null);
           setDialog(true);
         }} className="gap-1">
           <Plus className="h-3 w-3" /> Add Exam Paper
@@ -984,11 +1101,13 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
                 </select>
               </div>
             </div>
-            <div className="space-y-2">
-              <Label>Upload PDF</Label>
-              <Input type="file" accept=".pdf" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              {editing?.file_url && <p className="text-xs text-muted-foreground">Current file: <a href={editing.file_url} target="_blank" className="text-primary hover:underline">View PDF</a></p>}
-            </div>
+            <FileDropZone
+              label="Upload PDF"
+              accept=".pdf"
+              currentFileUrl={editing?.file_url}
+              onFileSelected={(f) => { setFile(f); setUrlOverride(null); }}
+              onUrlProvided={(url) => { setUrlOverride(url); setFile(null); }}
+            />
             <Button onClick={save} disabled={uploading} className="w-full">
               {uploading ? "Uploading…" : <><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Add"} Exam Paper</>}
             </Button>
