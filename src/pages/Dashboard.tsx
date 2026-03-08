@@ -112,6 +112,9 @@ const Dashboard = () => {
     return acc;
   }, {});
 
+  // Redirect admins to admin dashboard
+  if (isAdmin) return <Navigate to="/admin" replace />;
+
   return (
     <PageTransition>
       <div className="min-h-screen flex flex-col bg-background">
