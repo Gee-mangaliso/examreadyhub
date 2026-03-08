@@ -318,6 +318,9 @@ const Leaderboard = () => {
                   <TabsTrigger value="consistency">Consistency</TabsTrigger>
                   <TabsTrigger value="overall">Overall Scores</TabsTrigger>
                   <TabsTrigger value="badges">Badges</TabsTrigger>
+                  <TabsTrigger value="history" className="gap-1">
+                    <History className="h-3.5 w-3.5" /> History
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="engagement">
