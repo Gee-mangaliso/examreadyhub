@@ -232,9 +232,17 @@ const AdminDashboard = () => {
         <main className="flex-1 py-16 px-4">
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
-              <h1 className="text-3xl sm:text-4xl font-heading text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Monitor student participation and performance</p>
+             <h1 className="text-3xl sm:text-4xl font-heading text-foreground">Admin Dashboard</h1>
+              <p className="text-muted-foreground mt-1">Monitor student participation and manage content</p>
             </div>
+
+            <Tabs defaultValue="students" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="students">Students</TabsTrigger>
+                <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="students" className="space-y-6">
 
             {/* Platform stats */}
             {stats && (
