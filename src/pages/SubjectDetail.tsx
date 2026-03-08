@@ -17,6 +17,8 @@ const getSections = (loggedIn: boolean) => [
   { id: "notes", label: "Notes", icon: FileText, locked: false },
   { id: "slides", label: "Slides", icon: Presentation, locked: false },
   { id: "examples", label: "Worked Examples", icon: Lightbulb, locked: false },
+  { id: "textbooks", label: "Textbooks", icon: BookMarked, locked: false },
+  { id: "study-guides", label: "Study Guides", icon: GraduationCap, locked: false },
   { id: "quizzes", label: "Quizzes", icon: HelpCircle, locked: !loggedIn },
   { id: "exams", label: "Practice Exams", icon: ClipboardList, locked: !loggedIn },
 ];
