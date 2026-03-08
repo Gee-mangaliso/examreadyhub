@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import {
   Trophy, Medal, Crown, Users, TrendingUp, TrendingDown, Minus,
-  Flame, Zap, Award, Filter, Sparkles,
+  Flame, Zap, Award, Filter, Sparkles, History,
 } from "lucide-react";
+import WeeklyComparison from "@/components/leaderboard/WeeklyComparison";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
