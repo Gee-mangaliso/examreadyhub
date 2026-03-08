@@ -154,7 +154,7 @@ const Leaderboard = () => {
 
               {/* MOST ENGAGED TAB */}
               <TabsContent value="engagement">
-                <LeaderboardTable entries={topEngaged} user={user} showWeekly />
+                <LeaderboardTable entries={topEngaged} user={user} showWeekly allEntries={[...entries].sort((a, b) => b.weekly_quizzes - a.weekly_quizzes)} />
               </TabsContent>
 
               {/* CONSISTENCY TAB */}
