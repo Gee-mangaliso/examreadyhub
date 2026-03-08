@@ -34,8 +34,11 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const Dashboard = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const { toast } = useToast();
+
+  // Redirect admins to admin dashboard
+  if (isAdmin) return <Navigate to="/admin" replace />;
   const [grades, setGrades] = useState<Grade[]>([]);
   const [selectedGrade, setSelectedGrade] = useState<string>("");
   const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
