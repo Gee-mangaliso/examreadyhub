@@ -85,6 +85,7 @@ const SuggestionManager = () => {
     }
 
     if (bulkMode && !selectedSubject) {
+      playError();
       toast({ title: "Please select a subject for bulk send", variant: "destructive" });
       return;
     }
