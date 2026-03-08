@@ -53,12 +53,12 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const [selectedProvince, setSelectedProvince] = useState("Common Papers");
+  const [selectedProvince, setSelectedProvince] = useState("");
   const [selectedYear, setSelectedYear] = useState<string>("all");
   const [papers, setPapers] = useState<ExamPaper[]>([]);
   const [completions, setCompletions] = useState<Record<string, Completion>>({});
   const [memoRequests, setMemoRequests] = useState<Record<string, MemoRequest>>({});
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [scoreDialog, setScoreDialog] = useState<ExamPaper | null>(null);
   const [scoreInput, setScoreInput] = useState("");
   const [totalMarksInput, setTotalMarksInput] = useState("100");
@@ -66,6 +66,7 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
 
   // Fetch papers for subject + province
   useEffect(() => {
+    if (!selectedProvince) { setPapers([]); setLoading(false); return; }
     const fetchPapers = async () => {
       setLoading(true);
       let query = supabase
@@ -167,7 +168,7 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
           <MapPin className="h-4 w-4 text-muted-foreground" />
           <Select value={selectedProvince} onValueChange={setSelectedProvince}>
             <SelectTrigger className="w-[200px] bg-card border-border">
-              <SelectValue />
+              <SelectValue placeholder="Select province or paper type" />
             </SelectTrigger>
             <SelectContent>
               {PROVINCES.map((p) => (
@@ -193,7 +194,12 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
       </div>
 
 
-      {loading ? (
+      {!selectedProvince ? (
+        <div className="bg-card border border-border rounded-lg p-10 text-center shadow-card">
+          <MapPin className="h-10 w-10 text-muted-foreground/50 mx-auto mb-4" />
+          <p className="text-muted-foreground">Select a province or paper type above to view exam papers.</p>
+        </div>
+      ) : loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
