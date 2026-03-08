@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { User, Plus, X, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import * as Icons from "lucide-react";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
