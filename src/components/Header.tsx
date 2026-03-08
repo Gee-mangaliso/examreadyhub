@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
+import NotificationBell from "@/components/NotificationBell";
 
 const Header = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -56,6 +57,7 @@ const Header = () => {
           >
             {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
+          <NotificationBell />
           {user ? (
             <>
               <span className="text-sm text-muted-foreground">{profile?.full_name || user.email}</span>
