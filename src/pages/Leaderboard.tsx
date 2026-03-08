@@ -416,6 +416,10 @@ const Leaderboard = () => {
                     </div>
                   )}
                 </TabsContent>
+
+                <TabsContent value="history">
+                  <WeeklyComparison />
+                </TabsContent>
               </Tabs>
             )}
           </div>
