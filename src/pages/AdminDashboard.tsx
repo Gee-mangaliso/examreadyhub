@@ -330,7 +330,12 @@ const AdminDashboard = () => {
                   </TableBody>
                 </Table>
               )}
-            </div>
+              </TabsContent>
+
+              <TabsContent value="quizzes">
+                <QuizManager />
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
       </div>

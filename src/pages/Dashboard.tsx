@@ -101,6 +101,9 @@ const Dashboard = () => {
               </div>
             </div>
 
+            {/* Study Streak */}
+            <StudyStreak />
+
             {/* My Subjects */}
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-heading text-foreground">My Subjects</h2>
