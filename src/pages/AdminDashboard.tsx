@@ -274,8 +274,9 @@ const AdminDashboard = () => {
                 <SearchAnalytics />
               </TabsContent>
 
-              <TabsContent value="suggestions">
+              <TabsContent value="suggestions" className="space-y-8">
                 <SuggestionManager />
+                <SuggestionHistory />
               </TabsContent>
 
               <TabsContent value="badges">
