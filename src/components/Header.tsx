@@ -57,6 +57,7 @@ const Header = () => {
           >
             {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
           </button>
+          <NotificationBell />
           {user ? (
             <>
               <span className="text-sm text-muted-foreground">{profile?.full_name || user.email}</span>
