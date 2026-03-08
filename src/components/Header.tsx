@@ -17,7 +17,7 @@ const Header = () => {
     { to: "/", label: "Home" },
     ...(user ? [
       { to: "/leaderboard", label: "Leaderboard" },
-      { to: "/dashboard", label: "Dashboard" },
+      ...(!isAdmin ? [{ to: "/dashboard", label: "Dashboard" }] : []),
       { to: "/profile", label: "Profile" },
     ] : [
       { to: "/grades", label: "Grades" },
