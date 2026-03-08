@@ -396,6 +396,10 @@ const AdminDashboard = () => {
               <TabsContent value="ratings">
                 <RatingsViewer />
               </TabsContent>
+
+              <TabsContent value="restrictions">
+                <RestrictionsOverview />
+              </TabsContent>
             </Tabs>
           </div>
         </main>
