@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import {
   Lock, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList,
   BookOpen, Play, Loader2, Download, ExternalLink,
