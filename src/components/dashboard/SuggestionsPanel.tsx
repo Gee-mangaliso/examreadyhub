@@ -3,6 +3,7 @@ import { Sparkles, FileText, Presentation, Lightbulb, HelpCircle, ClipboardList,
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { playNotification } from "@/lib/sounds";
 
 interface Suggestion {
   id: string;
@@ -30,7 +31,7 @@ const SuggestionsPanel = () => {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchSuggestions = () => {
     if (!user) return;
     supabase
       .from("admin_suggestions")
@@ -42,6 +43,31 @@ const SuggestionsPanel = () => {
         setSuggestions((data as Suggestion[]) || []);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    if (!user) return;
+    fetchSuggestions();
+
+    // Realtime: play sound when a new suggestion arrives for this learner
+    const channel = supabase
+      .channel("learner-suggestions-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "admin_suggestions",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          playNotification();
+          fetchSuggestions();
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const markRead = async (id: string) => {
