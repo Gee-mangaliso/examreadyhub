@@ -10,7 +10,7 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, isAdmin, signOut } = useAuth();
 
   const navLinks = [
     { to: "/", label: "Home" },
@@ -20,6 +20,7 @@ const Header = () => {
       { to: "/dashboard", label: "Dashboard" },
       { to: "/profile", label: "Profile" },
     ] : []),
+    ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
   ];
 
   const handleSignOut = async () => {
