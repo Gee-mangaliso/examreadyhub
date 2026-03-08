@@ -280,6 +280,10 @@ const AdminDashboard = () => {
               <TabsContent value="badges">
                 <BadgeManager />
               </TabsContent>
+
+              <TabsContent value="memos">
+                <MemoRequestManager />
+              </TabsContent>
             </Tabs>
           </div>
         </main>
