@@ -16,6 +16,7 @@ import SignUp from "./pages/SignUp";
 import Dashboard from "./pages/Dashboard";
 import SubjectProgress from "./pages/SubjectProgress";
 import ProfileSettings from "./pages/ProfileSettings";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
