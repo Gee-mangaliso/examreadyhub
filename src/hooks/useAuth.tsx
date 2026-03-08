@@ -35,6 +35,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("user_id", userId)
       .single();
     setProfile(data);
+
+    // Check admin role
+    const { data: roleData } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+    setIsAdmin(roleData === true);
   };
 
   useEffect(() => {
