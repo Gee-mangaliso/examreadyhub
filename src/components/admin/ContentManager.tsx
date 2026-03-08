@@ -882,6 +882,7 @@ const ExamPapersEditor = ({ subjectId }: { subjectId: string }) => {
     toast({ title: editing ? "Exam paper updated" : "Exam paper added" });
     setDialog(false);
     setFile(null);
+    setUrlOverride(null);
   };
 
   const remove = async (id: string) => {
