@@ -337,23 +337,8 @@ const SubjectDetail = () => {
               <TabsContent value="exams" className="mt-6">
                 {sections.find((s) => s.id === "exams")?.locked ? (
                   <LockedContent type="practice exams" />
-                ) : activeQuiz && activeQuiz.type === "exam" ? (
-                  <QuizPlayer quiz={activeQuiz} questions={quizQuestions} onBack={() => setActiveQuiz(null)} />
-                ) : exams.length > 0 ? (
-                  <div className="space-y-4">
-                    {exams.map((exam) => (
-                      <div key={exam.id} className="bg-card border border-border rounded-lg p-6 shadow-card flex items-center justify-between">
-                        <div>
-                          <h3 className="font-medium text-foreground">{exam.title}</h3>
-                          {exam.description && <p className="text-sm text-muted-foreground mt-1">{exam.description}</p>}
-                          {exam.time_limit_minutes && <span className="text-xs text-muted-foreground mt-2 inline-block">⏱ {exam.time_limit_minutes} min</span>}
-                        </div>
-                        <Button onClick={() => startQuiz(exam)} size="sm" variant="outline">
-                          <Play className="h-4 w-4 mr-1" /> Take Exam
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                ) : subjectId ? (
+                  <PracticeExamsBrowser subjectId={subjectId} />
                 ) : (
                   <EmptyContent icon={ClipboardList} message="No practice exams available yet." />
                 )}
