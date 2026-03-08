@@ -194,7 +194,12 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
       </div>
 
 
-      {loading ? (
+      {!selectedProvince ? (
+        <div className="bg-card border border-border rounded-lg p-10 text-center shadow-card">
+          <MapPin className="h-10 w-10 text-muted-foreground/50 mx-auto mb-4" />
+          <p className="text-muted-foreground">Select a province or paper type above to view exam papers.</p>
+        </div>
+      ) : loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
