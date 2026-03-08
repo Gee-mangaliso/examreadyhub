@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, Plus, Trash2, Pencil, Save, X,
   BookOpen, Presentation, Lightbulb, HelpCircle, ClipboardList,
-  FileText, Upload, GraduationCap,
+  FileText, Upload, GraduationCap, Link as LinkIcon,
 } from "lucide-react";
+import FileDropZone from "@/components/admin/FileDropZone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
