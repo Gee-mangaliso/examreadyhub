@@ -21,6 +21,7 @@ import RecentActivity from "@/components/dashboard/RecentActivity";
 import QuizHistory from "@/components/dashboard/QuizHistory";
 import SuggestionsPanel from "@/components/dashboard/SuggestionsPanel";
 import RecentlyAddedContent from "@/components/dashboard/RecentlyAddedContent";
+import RateExperience from "@/components/RateExperience";
 
 interface Grade { id: string; name: string; sort_order: number }
 interface Subject { id: string; name: string; icon: string | null; grade_id: string }
