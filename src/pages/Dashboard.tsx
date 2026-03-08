@@ -199,6 +199,9 @@ const Dashboard = () => {
               </div>
             )}
 
+            {/* Recently Added Content */}
+            <RecentlyAddedContent mySubjects={mySubjects} />
+
             {/* Stats cards */}
             <div className="grid sm:grid-cols-2 gap-6 mt-10">
               {[
