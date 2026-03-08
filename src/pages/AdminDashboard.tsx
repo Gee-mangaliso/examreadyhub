@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
+import QuizManager from "@/components/admin/QuizManager";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
