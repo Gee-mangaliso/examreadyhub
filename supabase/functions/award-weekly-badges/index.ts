@@ -131,14 +131,56 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Streak warning: if streak is 1 (about to break)
+      // Streak encouragement notifications
       if (streak === 1) {
         await supabase.rpc("create_notification", {
           _user_id: user.user_id,
           _type: "streak_warning",
           _title: "Streak Alert! 🔥",
-          _message:
-            "Your study streak is about to break! Complete a quiz today to keep it going.",
+          _message: "Your study streak is about to break! Complete a quiz today to keep it going.",
+          _metadata: JSON.stringify({}),
+        });
+      } else if (streak === 3) {
+        await supabase.rpc("create_notification", {
+          _user_id: user.user_id,
+          _type: "streak_milestone",
+          _title: "3-Day Streak! 🎯",
+          _message: "You've been studying for 3 days straight — amazing consistency! Keep pushing!",
+          _metadata: JSON.stringify({ streak: 3 }),
+        });
+      } else if (streak === 7) {
+        await supabase.rpc("create_notification", {
+          _user_id: user.user_id,
+          _type: "streak_milestone",
+          _title: "One Week Streak! 🏆",
+          _message: "7 days of studying! You're building a powerful habit. Your future self will thank you!",
+          _metadata: JSON.stringify({ streak: 7 }),
+        });
+      } else if (streak === 14) {
+        await supabase.rpc("create_notification", {
+          _user_id: user.user_id,
+          _type: "streak_milestone",
+          _title: "Two Week Legend! 🌟",
+          _message: "14 days without missing a beat! You're in the top tier of dedicated learners.",
+          _metadata: JSON.stringify({ streak: 14 }),
+        });
+      } else if (streak === 30) {
+        await supabase.rpc("create_notification", {
+          _user_id: user.user_id,
+          _type: "streak_milestone",
+          _title: "30-Day Champion! 👑",
+          _message: "A full month of daily studying! You're absolutely unstoppable. Incredible dedication!",
+          _metadata: JSON.stringify({ streak: 30 }),
+        });
+      }
+
+      // Encourage inactive students (0 streak, had activity before)
+      if ((streak || 0) === 0 && weeklyQuizCount === 0 && prevAttempts && prevAttempts.length > 0) {
+        await supabase.rpc("create_notification", {
+          _user_id: user.user_id,
+          _type: "encouragement",
+          _title: "We Miss You! 📚",
+          _message: "It's been a while since your last study session. Jump back in with a quick quiz today!",
           _metadata: JSON.stringify({}),
         });
       }

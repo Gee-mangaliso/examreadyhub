@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Users, BarChart3, TrendingUp, Activity, Eye, Search,
   ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen, Sparkles, SearchIcon, FileText,
-  ArrowRight
+  ArrowRight, Star
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import SearchAnalytics from "@/components/admin/SearchAnalytics";
 import MemoRequestManager from "@/components/admin/MemoRequestManager";
 import FeedbackManager from "@/components/admin/FeedbackManager";
 import TestimonialManager from "@/components/admin/TestimonialManager";
+import RatingsViewer from "@/components/admin/RatingsViewer";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
@@ -274,6 +275,7 @@ const AdminDashboard = () => {
                 <TabsTrigger value="memos" className="gap-1.5"><FileText className="h-4 w-4" />Memo Requests</TabsTrigger>
                 <TabsTrigger value="feedback" className="gap-1.5"><Activity className="h-4 w-4" />Feedback</TabsTrigger>
                 <TabsTrigger value="testimonials" className="gap-1.5"><Eye className="h-4 w-4" />Testimonials</TabsTrigger>
+                <TabsTrigger value="ratings" className="gap-1.5"><Star className="h-4 w-4" />Ratings</TabsTrigger>
               </TabsList>
 
               <TabsContent value="content">
@@ -372,6 +374,10 @@ const AdminDashboard = () => {
 
               <TabsContent value="testimonials">
                 <TestimonialManager />
+              </TabsContent>
+
+              <TabsContent value="ratings">
+                <RatingsViewer />
               </TabsContent>
             </Tabs>
           </div>
