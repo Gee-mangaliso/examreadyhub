@@ -60,7 +60,7 @@ const getInitials = (name: string) =>
   name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2) || "?";
 
 const Leaderboard = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [recentBadges, setRecentBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,8 +79,24 @@ const Leaderboard = () => {
   }, []);
 
   const userRank = user ? entries.findIndex((e) => e.user_id === user.id) + 1 : 0;
-  const topEngaged = [...entries].sort((a, b) => b.weekly_quizzes - a.weekly_quizzes).slice(0, 10);
-  const consistentLearners = [...entries].filter((e) => e.current_streak >= 2).sort((a, b) => b.current_streak - a.current_streak);
+
+  // For learners: show top 3 + current user; for admins: show all
+  const filterForLearner = (list: LeaderboardEntry[]) => {
+    if (isAdmin) return list;
+    const top3 = list.slice(0, 3);
+    const currentUser = user ? list.find((e) => e.user_id === user.id) : null;
+    if (currentUser && !top3.some((e) => e.user_id === currentUser.user_id)) {
+      return [...top3, currentUser];
+    }
+    return top3;
+  };
+
+  const topEngaged = filterForLearner([...entries].sort((a, b) => b.weekly_quizzes - a.weekly_quizzes));
+  const consistentLearners = (() => {
+    const all = [...entries].filter((e) => e.current_streak >= 2).sort((a, b) => b.current_streak - a.current_streak);
+    return isAdmin ? all : filterForLearner(all);
+  })();
+  const overallEntries = filterForLearner(entries);
 
   return (
     <PageTransition>
@@ -138,7 +154,7 @@ const Leaderboard = () => {
 
               {/* MOST ENGAGED TAB */}
               <TabsContent value="engagement">
-                <LeaderboardTable entries={topEngaged} user={user} showWeekly />
+                <LeaderboardTable entries={topEngaged} user={user} showWeekly allEntries={[...entries].sort((a, b) => b.weekly_quizzes - a.weekly_quizzes)} />
               </TabsContent>
 
               {/* CONSISTENCY TAB */}
@@ -184,7 +200,7 @@ const Leaderboard = () => {
 
               {/* OVERALL SCORES TAB */}
               <TabsContent value="overall">
-                <LeaderboardTable entries={entries} user={user} showWeekly={false} />
+                <LeaderboardTable entries={overallEntries} user={user} showWeekly={false} allEntries={entries} />
               </TabsContent>
 
               {/* BADGES TAB */}
@@ -232,8 +248,10 @@ const Leaderboard = () => {
 
 // Reusable leaderboard table
 const LeaderboardTable = ({
-  entries, user, showWeekly,
-}: { entries: LeaderboardEntry[]; user: any; showWeekly: boolean }) => {
+  entries, user, showWeekly, allEntries,
+}: { entries: LeaderboardEntry[]; user: any; showWeekly: boolean; allEntries?: LeaderboardEntry[] }) => {
+  // Build a rank map from allEntries (full sorted list) so ranks are accurate
+  const rankSource = allEntries || entries;
   if (entries.length === 0) {
     return (
       <div className="bg-card border border-border rounded-lg p-12 text-center shadow-card">
@@ -256,54 +274,63 @@ const LeaderboardTable = ({
           <span className="text-xs font-medium text-muted-foreground text-center hidden sm:block">Trend</span>
         </div>
         {entries.map((entry, i) => {
-          const rank = i + 1;
+          const actualRank = rankSource.findIndex((e) => e.user_id === entry.user_id) + 1;
           const isCurrentUser = user?.id === entry.user_id;
+          const showSeparator = i > 0 && actualRank > (rankSource.findIndex((e) => e.user_id === entries[i - 1].user_id) + 1) + 1;
           return (
-            <div
-              key={entry.user_id}
-              className={`grid grid-cols-[48px_1fr_80px_80px_100px] sm:grid-cols-[48px_1fr_100px_80px_100px_80px] items-center px-4 py-3 transition-colors ${
-                isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20"
-              }`}
-            >
-              <div className="flex items-center justify-center">{getRankIcon(rank)}</div>
-              <div className="flex items-center gap-3 min-w-0">
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarImage src={entry.avatar_url || undefined} />
-                  <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(entry.full_name)}</AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  <span className="text-sm font-medium text-foreground truncate block">
-                    {entry.full_name}
-                    {isCurrentUser && <span className="text-xs text-primary ml-1">(You)</span>}
-                  </span>
-                  <div className="flex items-center gap-1">
-                    {entry.current_streak > 0 && (
-                      <Badge variant="secondary" className="text-[10px] px-1 py-0 gap-0.5">
-                        <Flame className="h-2.5 w-2.5 text-orange-500" />{entry.current_streak}
-                      </Badge>
-                    )}
-                    {entry.badge_count > 0 && (
-                      <Badge variant="outline" className="text-[10px] px-1 py-0 gap-0.5">
-                        <Award className="h-2.5 w-2.5" />{entry.badge_count}
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="text-center text-sm font-semibold text-foreground">
-                {entry.total_score}/{entry.total_questions}
-              </div>
-              {showWeekly && (
-                <div className="text-center text-sm text-muted-foreground hidden sm:block">
-                  {entry.weekly_quizzes}
+            <div key={entry.user_id}>
+              {showSeparator && (
+                <div className="flex items-center justify-center py-2 text-muted-foreground text-xs gap-2">
+                  <span className="h-px flex-1 bg-border" />
+                  <span>•••</span>
+                  <span className="h-px flex-1 bg-border" />
                 </div>
               )}
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-sm font-medium text-foreground">{entry.avg_percentage}%</span>
-                <Progress value={entry.avg_percentage} className="h-1.5 w-full max-w-[80px]" />
-              </div>
-              <div className="hidden sm:flex items-center justify-center gap-1">
-                {getTrendIcon(entry.trend)}
+              <div
+                className={`grid grid-cols-[48px_1fr_80px_80px_100px] sm:grid-cols-[48px_1fr_100px_80px_100px_80px] items-center px-4 py-3 transition-colors ${
+                  isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20"
+                }`}
+              >
+                <div className="flex items-center justify-center">{getRankIcon(actualRank)}</div>
+                <div className="flex items-center gap-3 min-w-0">
+                  <Avatar className="h-8 w-8 shrink-0">
+                    <AvatarImage src={entry.avatar_url || undefined} />
+                    <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(entry.full_name)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <span className="text-sm font-medium text-foreground truncate block">
+                      {entry.full_name}
+                      {isCurrentUser && <span className="text-xs text-primary ml-1">(You)</span>}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {entry.current_streak > 0 && (
+                        <Badge variant="secondary" className="text-[10px] px-1 py-0 gap-0.5">
+                          <Flame className="h-2.5 w-2.5 text-orange-500" />{entry.current_streak}
+                        </Badge>
+                      )}
+                      {entry.badge_count > 0 && (
+                        <Badge variant="outline" className="text-[10px] px-1 py-0 gap-0.5">
+                          <Award className="h-2.5 w-2.5" />{entry.badge_count}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="text-center text-sm font-semibold text-foreground">
+                  {entry.total_score}/{entry.total_questions}
+                </div>
+                {showWeekly && (
+                  <div className="text-center text-sm text-muted-foreground hidden sm:block">
+                    {entry.weekly_quizzes}
+                  </div>
+                )}
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-sm font-medium text-foreground">{entry.avg_percentage}%</span>
+                  <Progress value={entry.avg_percentage} className="h-1.5 w-full max-w-[80px]" />
+                </div>
+                <div className="hidden sm:flex items-center justify-center gap-1">
+                  {getTrendIcon(entry.trend)}
+                </div>
               </div>
             </div>
           );
