@@ -192,22 +192,6 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
         </div>
       </div>
 
-      {/* Province tabs */}
-      <div className="flex flex-wrap gap-1.5">
-        {PROVINCES.map((p) => (
-          <button
-            key={p}
-            onClick={() => setSelectedProvince(p)}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-              selectedProvince === p
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-            }`}
-          >
-            {p}
-          </button>
-        ))}
-      </div>
 
       {loading ? (
         <div className="flex justify-center py-12">
