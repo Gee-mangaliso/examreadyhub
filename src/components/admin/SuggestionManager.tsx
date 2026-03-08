@@ -79,6 +79,7 @@ const SuggestionManager = () => {
     }
 
     if (!bulkMode && !selectedStudent) {
+      playError();
       toast({ title: "Please select a student", variant: "destructive" });
       return;
     }
