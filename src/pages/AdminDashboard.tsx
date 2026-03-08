@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Users, BarChart3, TrendingUp, Activity, Eye, Search,
-  ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen, Sparkles, SearchIcon
+  ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen, Sparkles, SearchIcon, FileText
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import ContentManager from "@/components/admin/ContentManager";
 import BadgeManager from "@/components/admin/BadgeManager";
 import SuggestionManager from "@/components/admin/SuggestionManager";
 import SearchAnalytics from "@/components/admin/SearchAnalytics";
+import MemoRequestManager from "@/components/admin/MemoRequestManager";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
@@ -192,6 +193,7 @@ const AdminDashboard = () => {
                 <TabsTrigger value="suggestions" className="gap-1.5"><Sparkles className="h-4 w-4" />Suggestions</TabsTrigger>
                 <TabsTrigger value="analytics" className="gap-1.5"><Search className="h-4 w-4" />Search Analytics</TabsTrigger>
                 <TabsTrigger value="badges" className="gap-1.5"><Award className="h-4 w-4" />Badges</TabsTrigger>
+                <TabsTrigger value="memos" className="gap-1.5"><FileText className="h-4 w-4" />Memo Requests</TabsTrigger>
               </TabsList>
 
               <TabsContent value="content">
@@ -277,6 +279,10 @@ const AdminDashboard = () => {
 
               <TabsContent value="badges">
                 <BadgeManager />
+              </TabsContent>
+
+              <TabsContent value="memos">
+                <MemoRequestManager />
               </TabsContent>
             </Tabs>
           </div>
