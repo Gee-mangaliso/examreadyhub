@@ -35,6 +35,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [banInfo, setBanInfo] = useState<BanInfo | null>(null);
+  const [restrictions, setRestrictions] = useState<any[]>([]);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
