@@ -25,7 +25,12 @@ const Login = () => {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Welcome back!" });
-      navigate("/dashboard");
+      // We need to check admin status after login - fetch it fresh
+      const { data: roleData } = await (await import("@/integrations/supabase/client")).supabase.rpc("has_role", {
+        _user_id: (await (await import("@/integrations/supabase/client")).supabase.auth.getUser()).data.user?.id!,
+        _role: "admin",
+      });
+      navigate(roleData === true ? "/admin" : "/dashboard");
     }
   };
 
