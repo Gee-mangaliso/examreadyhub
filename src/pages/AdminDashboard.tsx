@@ -21,6 +21,8 @@ import SuggestionManager from "@/components/admin/SuggestionManager";
 import SuggestionHistory from "@/components/admin/SuggestionHistory";
 import SearchAnalytics from "@/components/admin/SearchAnalytics";
 import MemoRequestManager from "@/components/admin/MemoRequestManager";
+import FeedbackManager from "@/components/admin/FeedbackManager";
+import TestimonialManager from "@/components/admin/TestimonialManager";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Student {
@@ -195,6 +197,8 @@ const AdminDashboard = () => {
                 <TabsTrigger value="analytics" className="gap-1.5"><Search className="h-4 w-4" />Search Analytics</TabsTrigger>
                 <TabsTrigger value="badges" className="gap-1.5"><Award className="h-4 w-4" />Badges</TabsTrigger>
                 <TabsTrigger value="memos" className="gap-1.5"><FileText className="h-4 w-4" />Memo Requests</TabsTrigger>
+                <TabsTrigger value="feedback" className="gap-1.5"><Activity className="h-4 w-4" />Feedback</TabsTrigger>
+                <TabsTrigger value="testimonials" className="gap-1.5"><Eye className="h-4 w-4" />Testimonials</TabsTrigger>
               </TabsList>
 
               <TabsContent value="content">
@@ -285,6 +289,14 @@ const AdminDashboard = () => {
 
               <TabsContent value="memos">
                 <MemoRequestManager />
+              </TabsContent>
+
+              <TabsContent value="feedback">
+                <FeedbackManager />
+              </TabsContent>
+
+              <TabsContent value="testimonials">
+                <TestimonialManager />
               </TabsContent>
             </Tabs>
           </div>
