@@ -244,6 +244,70 @@ const SubjectDetail = () => {
                 )}
               </TabsContent>
 
+              {/* TEXTBOOKS */}
+              <TabsContent value="textbooks" className="mt-6">
+                {textbooks.length > 0 ? (
+                  <div className="space-y-4">
+                    {textbooks.map((tb) => (
+                      <div key={tb.id} className="bg-card border border-border rounded-lg p-6 shadow-card">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <BookMarked className="h-5 w-5 text-primary shrink-0" />
+                            <div>
+                              <h3 className="font-medium text-foreground">{tb.title}</h3>
+                              {tb.description && <p className="text-sm text-muted-foreground mt-1">{tb.description}</p>}
+                            </div>
+                          </div>
+                          {tb.file_url && (
+                            <Button asChild size="sm" variant="outline">
+                              <a href={tb.file_url} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4 mr-1" /> Download
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyContent icon={BookMarked} message="No textbooks available yet." />
+                )}
+              </TabsContent>
+
+              {/* STUDY GUIDES */}
+              <TabsContent value="study-guides" className="mt-6">
+                {studyGuides.length > 0 ? (
+                  <div className="space-y-4">
+                    {studyGuides.map((guide) => (
+                      <div key={guide.id} className="bg-card border border-border rounded-lg shadow-card overflow-hidden">
+                        <div className="px-6 py-4 flex items-start justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <GraduationCap className="h-5 w-5 text-primary shrink-0" />
+                            <div>
+                              <h3 className="font-medium text-foreground">{guide.title}</h3>
+                              {guide.content && (
+                                <div className="mt-3 prose prose-sm max-w-none text-foreground">
+                                  {renderMarkdown(guide.content)}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {guide.file_url && (
+                            <Button asChild size="sm" variant="outline" className="shrink-0">
+                              <a href={guide.file_url} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4 mr-1" /> Download
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyContent icon={GraduationCap} message="No study guides available yet." />
+                )}
+              </TabsContent>
+
               {/* QUIZZES */}
               <TabsContent value="quizzes" className="mt-6">
                 {sections.find((s) => s.id === "quizzes")?.locked ? (
