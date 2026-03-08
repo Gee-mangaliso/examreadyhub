@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { BookOpen, GraduationCap, ArrowRight, FileText, HelpCircle, ClipboardList } from "lucide-react";
+import {
+  BookOpen, GraduationCap, ArrowRight, FileText, HelpCircle, ClipboardList,
+  Target, Users, Lightbulb, Shield, Brain, Trophy, Heart, Sparkles
+} from "lucide-react";
 import * as Icons from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
@@ -105,52 +108,142 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Features */}
-        <section className="py-20 px-4 bg-background">
+        {/* About Section */}
+        <section className="py-20 px-4 bg-muted/30">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-3xl font-heading text-center mb-12 text-foreground">Everything you need to succeed</h2>
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-heading text-foreground mb-4">About ExamReady Hub</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
+                ExamReady Hub is a comprehensive online learning platform designed specifically for South African high school students in Grades 8–12. We provide quality study materials aligned with the CAPS curriculum to help every learner achieve their academic goals.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-3 gap-8">
+              <div className="bg-card rounded-xl p-6 shadow-card text-center space-y-3 border border-border">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-heading text-lg text-foreground">Built for Learners</h3>
+                <p className="text-muted-foreground text-sm">Created by educators who understand the South African curriculum and what students need to succeed.</p>
+              </div>
+              <div className="bg-card rounded-xl p-6 shadow-card text-center space-y-3 border border-border">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-heading text-lg text-foreground">CAPS Aligned</h3>
+                <p className="text-muted-foreground text-sm">All content follows the Curriculum and Assessment Policy Statement, ensuring relevance and accuracy.</p>
+              </div>
+              <div className="bg-card rounded-xl p-6 shadow-card text-center space-y-3 border border-border">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+                  <Brain className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-heading text-lg text-foreground">AI-Powered Help</h3>
+                <p className="text-muted-foreground text-sm">Get instant help from our AI study assistant that understands your subjects and adapts to your learning needs.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Mission Section */}
+        <section className="py-20 px-4 bg-background">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-primary text-sm mb-6">
+              <Heart className="h-4 w-4" />
+              Our Mission
+            </div>
+            <h2 className="text-3xl font-heading text-foreground mb-6">Empowering Every Learner to Succeed</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto mb-8">
+              Our mission is to bridge the educational gap by providing free, high-quality study resources to every South African high school student — regardless of their background or location. We believe that with the right tools, every learner can achieve academic excellence.
+            </p>
+            <div className="grid sm:grid-cols-3 gap-6 mt-10">
+              <div className="flex flex-col items-center gap-3 p-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Target className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-heading text-foreground">Accessible Education</h3>
+                <p className="text-muted-foreground text-sm">Quality resources available to all students across South Africa.</p>
+              </div>
+              <div className="flex flex-col items-center gap-3 p-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Lightbulb className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-heading text-foreground">Active Learning</h3>
+                <p className="text-muted-foreground text-sm">Interactive quizzes and practice exams to reinforce understanding.</p>
+              </div>
+              <div className="flex flex-col items-center gap-3 p-4">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Trophy className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-heading text-foreground">Exam Excellence</h3>
+                <p className="text-muted-foreground text-sm">Targeted exam prep with past papers and worked solutions.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features / What We Offer */}
+        <section className="py-20 px-4 bg-muted/30">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-primary text-sm mb-4">
+                <Sparkles className="h-4 w-4" />
+                What We Offer
+              </div>
+              <h2 className="text-3xl font-heading text-foreground">Everything you need to succeed</h2>
+            </div>
 
             {user && mySubjects.length > 0 ? (
-              <div className="space-y-10">
+              <div className="space-y-6">
                 {[
-                  { title: "Comprehensive Notes", desc: "Study materials for every subject.", icon: FileText, tab: "notes" },
-                  { title: "Practice Quizzes", desc: "Test your knowledge with interactive quizzes.", icon: HelpCircle, tab: "quizzes" },
-                  { title: "Exam Preparation", desc: "Past papers and worked examples to get you ready.", icon: ClipboardList, tab: "exams" },
+                  { title: "Comprehensive Notes", desc: "In-depth study materials covering every topic in the CAPS curriculum, written in clear and simple language.", icon: FileText, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
+                  { title: "Practice Quizzes", desc: "Interactive multiple-choice quizzes with instant feedback, explanations, and score tracking to test your knowledge.", icon: HelpCircle, color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10" },
+                  { title: "Worked Examples", desc: "Step-by-step worked solutions that show you exactly how to approach and solve exam-style problems.", icon: Lightbulb, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
+                  { title: "Practice Exams", desc: "Real past exam papers from all nine provinces with a lockdown browser for authentic exam conditions.", icon: ClipboardList, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
+                  { title: "AI Study Assistant", desc: "Get instant help from our AI chatbot — explain concepts, solve problems, and get personalised study tips 24/7.", icon: Brain, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10" },
                 ].map((feature) => (
-                  <div key={feature.title} className="bg-card rounded-lg p-6 shadow-card space-y-4">
-                    <div className="flex items-center gap-3">
-                      <feature.icon className="h-6 w-6 text-primary" />
-                      <h3 className="font-heading text-xl text-foreground">{feature.title}</h3>
-                    </div>
-                    <p className="text-muted-foreground text-sm">{feature.desc}</p>
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {mySubjects.map((us) => {
-                        const Icon = iconMap[us.subjects?.icon || ""] || Icons.BookOpen;
-                        const gradeNum = getGradeNum(us.subjects?.grade_id);
-                        return (
-                          <Link
-                            key={us.id}
-                            to={`/grades/${gradeNum}/subjects/${encodeURIComponent(us.subjects?.name || "")}`}
-                            className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-foreground hover:border-primary/40 hover:bg-primary/5 transition-colors"
-                          >
-                            <Icon className="h-4 w-4 text-primary" />
-                            {us.subjects?.name}
-                          </Link>
-                        );
-                      })}
+                  <div key={feature.title} className="bg-card rounded-xl p-6 shadow-card border border-border">
+                    <div className="flex items-start gap-4">
+                      <div className={`p-3 rounded-xl ${feature.bg} shrink-0`}>
+                        <feature.icon className={`h-6 w-6 ${feature.color}`} />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-heading text-lg text-foreground mb-1">{feature.title}</h3>
+                        <p className="text-muted-foreground text-sm mb-3">{feature.desc}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {mySubjects.map((us) => {
+                            const Icon = iconMap[us.subjects?.icon || ""] || Icons.BookOpen;
+                            const gradeNum = getGradeNum(us.subjects?.grade_id);
+                            return (
+                              <Link
+                                key={us.id}
+                                to={`/grades/${gradeNum}/subjects/${encodeURIComponent(us.subjects?.name || "")}`}
+                                className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-foreground hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                              >
+                                <Icon className="h-3.5 w-3.5 text-primary" />
+                                {us.subjects?.name}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid sm:grid-cols-3 gap-8">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
-                  { title: "Comprehensive Notes", desc: "Study materials for every subject and grade." },
-                  { title: "Practice Quizzes", desc: "Test your knowledge with interactive quizzes." },
-                  { title: "Exam Preparation", desc: "Past papers and worked examples to get you ready." },
+                  { title: "Comprehensive Notes", desc: "In-depth study materials covering every topic in the CAPS curriculum.", icon: FileText, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10" },
+                  { title: "Practice Quizzes", desc: "Interactive quizzes with instant feedback and score tracking.", icon: HelpCircle, color: "text-green-600 dark:text-green-400", bg: "bg-green-500/10" },
+                  { title: "Worked Examples", desc: "Step-by-step solutions for exam-style problems.", icon: Lightbulb, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10" },
+                  { title: "Practice Exams", desc: "Real past papers with lockdown browser for authentic conditions.", icon: ClipboardList, color: "text-red-600 dark:text-red-400", bg: "bg-red-500/10" },
+                  { title: "AI Study Assistant", desc: "Get instant AI-powered help with any subject, 24/7.", icon: Brain, color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10" },
+                  { title: "Leaderboard & Badges", desc: "Compete with friends, earn badges, and track your streaks.", icon: Trophy, color: "text-orange-600 dark:text-orange-400", bg: "bg-orange-500/10" },
                 ].map((f) => (
-                  <div key={f.title} className="bg-card rounded-lg p-6 shadow-card text-center space-y-3">
-                    <h3 className="font-heading text-xl text-foreground">{f.title}</h3>
+                  <div key={f.title} className="bg-card rounded-xl p-6 shadow-card border border-border text-center space-y-3">
+                    <div className={`h-12 w-12 rounded-xl ${f.bg} flex items-center justify-center mx-auto`}>
+                      <f.icon className={`h-6 w-6 ${f.color}`} />
+                    </div>
+                    <h3 className="font-heading text-lg text-foreground">{f.title}</h3>
                     <p className="text-muted-foreground text-sm">{f.desc}</p>
                   </div>
                 ))}
@@ -159,8 +252,40 @@ const Home = () => {
           </div>
         </section>
 
+        {/* CTA Section */}
+        <section className="py-16 px-4 bg-background">
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl font-heading text-foreground mb-4">Ready to start studying?</h2>
+            <p className="text-muted-foreground mb-8">Join thousands of South African learners who are already using ExamReady Hub to prepare for their exams.</p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              {user ? (
+                <Button asChild size="lg" className="text-base px-8">
+                  <Link to="/dashboard">
+                    <BookOpen className="mr-2 h-5 w-5" />
+                    Go to Dashboard
+                  </Link>
+                </Button>
+              ) : (
+                <>
+                  <Button asChild size="lg" className="text-base px-8">
+                    <Link to="/signup">
+                      Get Started Free
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg" className="text-base px-8">
+                    <Link to="/grades">
+                      Browse Content
+                    </Link>
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Footer */}
-        <footer className="border-t py-8 px-4 text-center text-sm text-muted-foreground">
+        <footer className="border-t border-border py-8 px-4 text-center text-sm text-muted-foreground">
           © 2026 ExamReady Hub. All rights reserved.
         </footer>
       </div>

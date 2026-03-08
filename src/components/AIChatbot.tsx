@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { MessageCircle, X, Send, Bot, User, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/useAuth";
 import { playNotification, playSend } from "@/lib/sounds";
 import ReactMarkdown from "react-markdown";
@@ -10,6 +9,15 @@ import ReactMarkdown from "react-markdown";
 type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+const STORAGE_KEY = "examready-chat-history";
+
+const quickPrompts = [
+  { label: "🌿 Explain photosynthesis", message: "Explain photosynthesis in simple terms with a diagram description" },
+  { label: "📐 Quadratic equations", message: "Help me understand how to solve quadratic equations step by step" },
+  { label: "📝 Study tips for exams", message: "Give me effective study tips and strategies for exam preparation" },
+  { label: "🔬 Newton's laws", message: "Explain Newton's three laws of motion with real-life examples" },
+  { label: "📊 Statistics basics", message: "Help me understand mean, median, mode and standard deviation" },
+];
 
 async function streamChat({
   messages,
@@ -73,10 +81,20 @@ async function streamChat({
 const AIChatbot = () => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Msg[]>([]);
+  const [messages, setMessages] = useState<Msg[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Persist messages to localStorage
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch {}
+  }, [messages]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -84,12 +102,11 @@ const AIChatbot = () => {
     }
   }, [messages, open]);
 
-  const send = async () => {
-    const text = input.trim();
-    if (!text || isLoading) return;
+  const sendMessage = useCallback(async (text: string) => {
+    if (!text.trim() || isLoading) return;
 
     playSend();
-    const userMsg: Msg = { role: "user", content: text };
+    const userMsg: Msg = { role: "user", content: text.trim() };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
@@ -120,13 +137,20 @@ const AIChatbot = () => {
         setIsLoading(false);
       },
     });
-  };
+  }, [messages, isLoading]);
+
+  const send = () => sendMessage(input);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       send();
     }
+  };
+
+  const clearHistory = () => {
+    setMessages([]);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   if (!user) return null;
@@ -153,18 +177,36 @@ const AIChatbot = () => {
               <Bot className="h-5 w-5 text-primary" />
               <span className="font-heading text-sm text-foreground">ExamReady AI</span>
             </div>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setOpen(false)}>
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              {messages.length > 0 && (
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive" onClick={clearHistory} title="Clear chat">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setOpen(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Messages */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
-              <div className="text-center text-muted-foreground text-sm py-8">
+              <div className="text-center text-muted-foreground text-sm py-4">
                 <Bot className="h-10 w-10 mx-auto mb-3 text-primary/40" />
                 <p className="font-medium text-foreground">Hi! I'm your AI study assistant 🎓</p>
-                <p className="mt-1">Ask me anything about your subjects, exam prep, or study tips.</p>
+                <p className="mt-1 mb-4">Ask me anything about your subjects, exam prep, or study tips.</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {quickPrompts.map((qp) => (
+                    <button
+                      key={qp.label}
+                      onClick={() => sendMessage(qp.message)}
+                      className="text-xs px-3 py-1.5 rounded-full border border-border bg-muted/50 text-foreground hover:border-primary/40 hover:bg-primary/5 transition-colors"
+                    >
+                      {qp.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             {messages.map((m, i) => (
