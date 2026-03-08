@@ -290,7 +290,7 @@ const Home = () => {
         </section>
 
         {/* Testimonials Section */}
-        <TestimonialsSection />
+        <TestimonialsSection user={user} />
 
         {/* Contact / Feedback Section */}
         <ContactSection user={user} />
