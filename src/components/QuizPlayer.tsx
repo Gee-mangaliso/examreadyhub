@@ -127,9 +127,37 @@ const QuizPlayer = ({ quiz, questions, onBack }: QuizPlayerProps) => {
         <div className="text-4xl font-bold text-foreground">{score}/{questions.length}</div>
         <p className="text-muted-foreground">{pct}% correct</p>
         <Progress value={pct} className="h-3 max-w-xs mx-auto" />
-        <div className="flex gap-3 justify-center pt-4">
+        <div className="flex flex-wrap gap-3 justify-center pt-4">
           <Button variant="outline" onClick={() => setReviewing(!reviewing)}>
             {reviewing ? "Hide Review" : "Review Answers"}
+          </Button>
+          <Button variant="outline" onClick={() => {
+            const lines = [
+              `Quiz Results: ${quiz.title}`,
+              `Score: ${score}/${questions.length} (${pct}%)`,
+              `Date: ${new Date().toLocaleString()}`,
+              "",
+              ...questions.map((q, i) => {
+                const ua = answers[i];
+                const correct = ua === q.correct_answer;
+                return [
+                  `${i + 1}. ${q.question}`,
+                  `   Your answer: ${ua || "Not answered"} ${correct ? "✓" : "✗"}`,
+                  ...(!correct ? [`   Correct answer: ${q.correct_answer}`] : []),
+                  ...(q.explanation ? [`   Explanation: ${q.explanation}`] : []),
+                  "",
+                ].join("\n");
+              }),
+            ];
+            const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${quiz.title.replace(/\s+/g, "-")}-results.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}>
+            <Download className="h-4 w-4 mr-2" />Download Results
           </Button>
           <Button variant="outline" onClick={onBack}>
             <RotateCcw className="h-4 w-4 mr-2" />Back to Quizzes
