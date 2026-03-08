@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import {
   Users, BarChart3, TrendingUp, Activity, Eye, Search,
-  ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen, Sparkles
+  ChevronLeft, GraduationCap, Clock, Award, BookOpen, FolderOpen, Sparkles, SearchIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
