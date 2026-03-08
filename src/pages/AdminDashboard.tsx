@@ -193,6 +193,7 @@ const AdminDashboard = () => {
                 <TabsTrigger value="suggestions" className="gap-1.5"><Sparkles className="h-4 w-4" />Suggestions</TabsTrigger>
                 <TabsTrigger value="analytics" className="gap-1.5"><Search className="h-4 w-4" />Search Analytics</TabsTrigger>
                 <TabsTrigger value="badges" className="gap-1.5"><Award className="h-4 w-4" />Badges</TabsTrigger>
+                <TabsTrigger value="memos" className="gap-1.5"><FileText className="h-4 w-4" />Memo Requests</TabsTrigger>
               </TabsList>
 
               <TabsContent value="content">
