@@ -307,17 +307,19 @@ const ProfileSettings = () => {
                 <Label>Email</Label>
                 <Input value={user?.email || ""} disabled className="opacity-60" />
               </div>
-              <div className="space-y-2">
-                <Label>Preferred Grade</Label>
-                <Select value={grade} onValueChange={setGrade}>
-                  <SelectTrigger><SelectValue placeholder="Select your grade" /></SelectTrigger>
-                  <SelectContent>
-                    {grades.map(g => (
-                      <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {!isAdmin && (
+                <div className="space-y-2">
+                  <Label>Preferred Grade</Label>
+                  <Select value={grade} onValueChange={setGrade}>
+                    <SelectTrigger><SelectValue placeholder="Select your grade" /></SelectTrigger>
+                    <SelectContent>
+                      {grades.map(g => (
+                        <SelectItem key={g.id} value={g.name}>{g.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
                 <Save className="h-4 w-4" />
                 {saving ? "Saving..." : "Save Changes"}
