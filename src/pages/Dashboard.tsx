@@ -231,7 +231,7 @@ const Dashboard = () => {
               </div>
             )}
 
-            <RecentlyAddedContent mySubjects={mySubjects} onContentLoaded={setRecentContent} />
+            <RecentlyAddedContent mySubjects={mySubjects} grades={grades} onContentLoaded={setRecentContent} />
 
             {/* Stats grid */}
             <div className="grid sm:grid-cols-2 gap-6 mt-10">
