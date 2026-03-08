@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { CheckCircle, XCircle, ArrowRight, RotateCcw, Trophy, Clock, ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle, XCircle, ArrowRight, RotateCcw, Trophy, Clock, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
