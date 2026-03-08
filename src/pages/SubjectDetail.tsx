@@ -215,13 +215,22 @@ const SubjectDetail = () => {
                               {slide.content && <p className="text-sm text-muted-foreground mt-1">{slide.content.slice(0, 200)}</p>}
                             </div>
                           </div>
-                          {slide.file_url && (
-                            <Button asChild size="sm" variant="outline">
-                              <a href={slide.file_url} target="_blank" rel="noopener noreferrer">
-                                <ExternalLink className="h-4 w-4 mr-1" /> View
-                              </a>
-                            </Button>
-                          )}
+                          <div className="flex gap-2 shrink-0">
+                            {slide.file_url && (
+                              <>
+                                <Button asChild size="sm" variant="outline">
+                                  <a href={slide.file_url} target="_blank" rel="noopener noreferrer">
+                                    <ExternalLink className="h-4 w-4 mr-1" /> View
+                                  </a>
+                                </Button>
+                                <Button asChild size="sm" variant="outline">
+                                  <a href={slide.file_url} download>
+                                    <Download className="h-4 w-4 mr-1" /> Download
+                                  </a>
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
