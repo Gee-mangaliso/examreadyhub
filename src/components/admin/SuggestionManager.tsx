@@ -11,6 +11,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { playSend, playError } from "@/lib/sounds";
 
 interface Student { user_id: string; full_name: string; email: string }
 interface ContentItem { id: string; title: string; type: string; subject_name: string; subject_id?: string }
