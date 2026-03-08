@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import {
   Trophy, Medal, Crown, Users, TrendingUp, TrendingDown, Minus,
-  Flame, Zap, Award,
+  Flame, Zap, Award, Filter,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,6 +34,11 @@ interface UserBadge {
   user_id: string;
   awarded_at: string;
   badges: { name: string; icon: string; description: string | null } | null;
+}
+
+interface SubjectOption {
+  id: string;
+  name: string;
 }
 
 const getRankIcon = (rank: number) => {
@@ -64,19 +70,56 @@ const Leaderboard = () => {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [recentBadges, setRecentBadges] = useState<UserBadge[]>([]);
   const [loading, setLoading] = useState(true);
+  const [enrolledSubjects, setEnrolledSubjects] = useState<SubjectOption[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("all");
 
+  // Fetch enrolled subjects for the filter
+  useEffect(() => {
+    if (!user || isAdmin) return;
+    const fetchSubjects = async () => {
+      const { data } = await supabase
+        .from("user_subjects")
+        .select("subject_id, subjects(id, name)")
+        .eq("user_id", user.id);
+      if (data) {
+        const subjects = data
+          .map((d: any) => d.subjects)
+          .filter(Boolean) as SubjectOption[];
+        setEnrolledSubjects(subjects);
+      }
+    };
+    fetchSubjects();
+  }, [user, isAdmin]);
+
+  // For admin, fetch all subjects
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchAllSubjects = async () => {
+      const { data } = await supabase.from("subjects").select("id, name").order("name");
+      if (data) setEnrolledSubjects(data);
+    };
+    fetchAllSubjects();
+  }, [isAdmin]);
+
+  // Fetch leaderboard data based on selected subject
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+      const leaderboardPromise = selectedSubject === "all"
+        ? supabase.rpc("get_enhanced_leaderboard", { limit_count: 50 })
+        : supabase.rpc("get_subject_leaderboard" as any, { _subject_id: selectedSubject, limit_count: 50 });
+
       const [leaderboardRes, badgesRes] = await Promise.all([
-        supabase.rpc("get_enhanced_leaderboard", { limit_count: 50 }),
+        leaderboardPromise,
         supabase.from("user_badges").select("*, badges(name, icon, description)").order("awarded_at", { ascending: false }).limit(10),
       ]);
       if (!leaderboardRes.error && leaderboardRes.data) setEntries(leaderboardRes.data as LeaderboardEntry[]);
+      else setEntries([]);
       if (!badgesRes.error && badgesRes.data) setRecentBadges(badgesRes.data as UserBadge[]);
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [selectedSubject]);
 
   const userRank = user ? entries.findIndex((e) => e.user_id === user.id) + 1 : 0;
 
@@ -98,6 +141,10 @@ const Leaderboard = () => {
   })();
   const overallEntries = filterForLearner(entries);
 
+  const subjectName = selectedSubject !== "all"
+    ? enrolledSubjects.find((s) => s.id === selectedSubject)?.name
+    : null;
+
   return (
     <PageTransition>
       <div className="min-h-screen flex flex-col bg-background">
@@ -109,8 +156,30 @@ const Leaderboard = () => {
                 <Trophy className="h-8 w-8 text-primary" />
               </div>
               <h1 className="text-3xl sm:text-4xl font-heading text-foreground">Leaderboard</h1>
-              <p className="text-muted-foreground mt-2">Track engagement, consistency, and improvement</p>
+              <p className="text-muted-foreground mt-2">
+                {subjectName
+                  ? `Rankings for ${subjectName}`
+                  : "Track engagement, consistency, and improvement"}
+              </p>
             </div>
+
+            {/* Subject Filter */}
+            {enrolledSubjects.length > 0 && (
+              <div className="flex items-center justify-center gap-3 mb-8">
+                <Filter className="h-4 w-4 text-muted-foreground" />
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger className="w-[240px] bg-card border-border">
+                    <SelectValue placeholder="Filter by subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Subjects</SelectItem>
+                    {enrolledSubjects.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Stats summary */}
             {entries.length > 0 && (
@@ -144,101 +213,104 @@ const Leaderboard = () => {
               </div>
             )}
 
-            <Tabs defaultValue="engagement" className="w-full">
-              <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-secondary p-1 rounded-lg mb-6">
-                <TabsTrigger value="engagement">Most Engaged</TabsTrigger>
-                <TabsTrigger value="consistency">Consistency</TabsTrigger>
-                <TabsTrigger value="overall">Overall Scores</TabsTrigger>
-                <TabsTrigger value="badges">Badges</TabsTrigger>
-              </TabsList>
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">Loading leaderboard...</div>
+            ) : (
+              <Tabs defaultValue="engagement" className="w-full">
+                <TabsList className="w-full flex flex-wrap h-auto gap-1 bg-secondary p-1 rounded-lg mb-6">
+                  <TabsTrigger value="engagement">Most Engaged</TabsTrigger>
+                  <TabsTrigger value="consistency">Consistency</TabsTrigger>
+                  <TabsTrigger value="overall">Overall Scores</TabsTrigger>
+                  <TabsTrigger value="badges">Badges</TabsTrigger>
+                </TabsList>
 
-              {/* MOST ENGAGED TAB */}
-              <TabsContent value="engagement">
-                <LeaderboardTable entries={topEngaged} user={user} showWeekly allEntries={[...entries].sort((a, b) => b.weekly_quizzes - a.weekly_quizzes)} />
-              </TabsContent>
+                {/* MOST ENGAGED TAB */}
+                <TabsContent value="engagement">
+                  <LeaderboardTable entries={topEngaged} user={user} showWeekly allEntries={[...entries].sort((a, b) => b.weekly_quizzes - a.weekly_quizzes)} />
+                </TabsContent>
 
-              {/* CONSISTENCY TAB */}
-              <TabsContent value="consistency">
-                {consistentLearners.length === 0 ? (
-                  <div className="bg-card border border-border rounded-lg p-12 text-center shadow-card">
-                    <Flame className="h-10 w-10 text-muted-foreground/50 mx-auto mb-4" />
-                    <p className="text-muted-foreground">No active streaks yet. Start studying daily!</p>
-                  </div>
-                ) : (
-                  <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden divide-y divide-border">
-                    {consistentLearners.map((entry, i) => {
-                      const isCurrentUser = user?.id === entry.user_id;
-                      return (
-                        <div key={entry.user_id} className={`flex items-center gap-4 px-4 py-4 ${isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20"}`}>
-                          <div className="flex items-center justify-center w-8">{getRankIcon(i + 1)}</div>
-                          <Avatar className="h-10 w-10 shrink-0">
-                            <AvatarImage src={entry.avatar_url || undefined} />
-                            <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(entry.full_name)}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-foreground truncate block">
-                              {entry.full_name} {isCurrentUser && <span className="text-xs text-primary">(You)</span>}
-                            </span>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge variant="secondary" className="text-xs gap-1">
-                                <Flame className="h-3 w-3 text-orange-500" /> {entry.current_streak} day streak
-                              </Badge>
-                              {getTrendIcon(entry.trend)}
-                              <span className="text-xs text-muted-foreground">{getTrendLabel(entry.trend)}</span>
+                {/* CONSISTENCY TAB */}
+                <TabsContent value="consistency">
+                  {consistentLearners.length === 0 ? (
+                    <div className="bg-card border border-border rounded-lg p-12 text-center shadow-card">
+                      <Flame className="h-10 w-10 text-muted-foreground/50 mx-auto mb-4" />
+                      <p className="text-muted-foreground">No active streaks yet. Start studying daily!</p>
+                    </div>
+                  ) : (
+                    <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden divide-y divide-border">
+                      {consistentLearners.map((entry, i) => {
+                        const isCurrentUser = user?.id === entry.user_id;
+                        return (
+                          <div key={entry.user_id} className={`flex items-center gap-4 px-4 py-4 ${isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/20"}`}>
+                            <div className="flex items-center justify-center w-8">{getRankIcon(i + 1)}</div>
+                            <Avatar className="h-10 w-10 shrink-0">
+                              <AvatarImage src={entry.avatar_url || undefined} />
+                              <AvatarFallback className="text-xs bg-primary/10 text-primary">{getInitials(entry.full_name)}</AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium text-foreground truncate block">
+                                {entry.full_name} {isCurrentUser && <span className="text-xs text-primary">(You)</span>}
+                              </span>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="secondary" className="text-xs gap-1">
+                                  <Flame className="h-3 w-3 text-orange-500" /> {entry.current_streak} day streak
+                                </Badge>
+                                {getTrendIcon(entry.trend)}
+                                <span className="text-xs text-muted-foreground">{getTrendLabel(entry.trend)}</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm font-semibold text-foreground">{entry.weekly_quizzes} quizzes</div>
+                              <div className="text-xs text-muted-foreground">this week</div>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-sm font-semibold text-foreground">{entry.weekly_quizzes} quizzes</div>
-                            <div className="text-xs text-muted-foreground">this week</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </TabsContent>
+                        );
+                      })}
+                    </div>
+                  )}
+                </TabsContent>
 
-              {/* OVERALL SCORES TAB */}
-              <TabsContent value="overall">
-                <LeaderboardTable entries={overallEntries} user={user} showWeekly={false} allEntries={entries} />
-              </TabsContent>
+                {/* OVERALL SCORES TAB */}
+                <TabsContent value="overall">
+                  <LeaderboardTable entries={overallEntries} user={user} showWeekly={false} allEntries={entries} />
+                </TabsContent>
 
-              {/* BADGES TAB */}
-              <TabsContent value="badges">
-                {recentBadges.length === 0 ? (
-                  <div className="bg-card border border-border rounded-lg p-12 text-center shadow-card">
-                    <Award className="h-10 w-10 text-muted-foreground/50 mx-auto mb-4" />
-                    <p className="text-muted-foreground">No badges awarded yet. Keep studying!</p>
-                  </div>
-                ) : (
-                  <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden divide-y divide-border">
-                    {recentBadges.map((ub) => {
-                      const IconComp = iconMap[ub.badges?.icon || "award"] || Award;
-                      const isCurrentUser = user?.id === ub.user_id;
-                      // Find name from entries
-                      const entry = entries.find((e) => e.user_id === ub.user_id);
-                      return (
-                        <div key={ub.id} className={`flex items-center gap-4 px-4 py-4 ${isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}>
-                          <div className="p-2 rounded-lg bg-primary/10">
-                            <IconComp className="h-5 w-5 text-primary" />
+                {/* BADGES TAB */}
+                <TabsContent value="badges">
+                  {recentBadges.length === 0 ? (
+                    <div className="bg-card border border-border rounded-lg p-12 text-center shadow-card">
+                      <Award className="h-10 w-10 text-muted-foreground/50 mx-auto mb-4" />
+                      <p className="text-muted-foreground">No badges awarded yet. Keep studying!</p>
+                    </div>
+                  ) : (
+                    <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden divide-y divide-border">
+                      {recentBadges.map((ub) => {
+                        const IconComp = iconMap[ub.badges?.icon || "award"] || Award;
+                        const isCurrentUser = user?.id === ub.user_id;
+                        const entry = entries.find((e) => e.user_id === ub.user_id);
+                        return (
+                          <div key={ub.id} className={`flex items-center gap-4 px-4 py-4 ${isCurrentUser ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}>
+                            <div className="p-2 rounded-lg bg-primary/10">
+                              <IconComp className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-sm font-medium text-foreground">{ub.badges?.name}</span>
+                              {ub.badges?.description && <p className="text-xs text-muted-foreground">{ub.badges.description}</p>}
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm text-foreground">{entry?.full_name || "Student"}</span>
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(ub.awarded_at).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <span className="text-sm font-medium text-foreground">{ub.badges?.name}</span>
-                            {ub.badges?.description && <p className="text-xs text-muted-foreground">{ub.badges.description}</p>}
-                          </div>
-                          <div className="text-right">
-                            <span className="text-sm text-foreground">{entry?.full_name || "Student"}</span>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(ub.awarded_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                        );
+                      })}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
           </div>
         </main>
       </div>
@@ -250,7 +322,6 @@ const Leaderboard = () => {
 const LeaderboardTable = ({
   entries, user, showWeekly, allEntries,
 }: { entries: LeaderboardEntry[]; user: any; showWeekly: boolean; allEntries?: LeaderboardEntry[] }) => {
-  // Build a rank map from allEntries (full sorted list) so ranks are accurate
   const rankSource = allEntries || entries;
   if (entries.length === 0) {
     return (
@@ -264,7 +335,6 @@ const LeaderboardTable = ({
   return (
     <div className="bg-card border border-border rounded-lg shadow-card overflow-hidden">
       <div className="divide-y divide-border">
-        {/* Header */}
         <div className="grid grid-cols-[48px_1fr_80px_80px_100px] sm:grid-cols-[48px_1fr_100px_80px_100px_80px] items-center px-4 py-3 bg-muted/30">
           <span className="text-xs font-medium text-muted-foreground">#</span>
           <span className="text-xs font-medium text-muted-foreground">Student</span>
