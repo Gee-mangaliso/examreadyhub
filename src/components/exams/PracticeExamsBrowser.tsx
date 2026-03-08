@@ -271,6 +271,9 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
                           {/* Action bar for completed papers */}
                           {completion && (
                             <div className="border-t border-border px-4 py-2 flex items-center justify-end gap-2 bg-muted/20">
+                              <Button size="sm" variant="ghost" onClick={() => setReviewPaper(paper)}>
+                                <ExternalLink className="h-3.5 w-3.5 mr-1" /> View Paper
+                              </Button>
                               {!memo ? (
                                 <Button size="sm" variant="outline" onClick={() => requestMemo(paper)}>
                                   <Send className="h-3.5 w-3.5 mr-1" /> Request Memo
