@@ -168,7 +168,7 @@ const PracticeExamsBrowser = ({ subjectId }: { subjectId: string }) => {
           <MapPin className="h-4 w-4 text-muted-foreground" />
           <Select value={selectedProvince} onValueChange={setSelectedProvince}>
             <SelectTrigger className="w-[200px] bg-card border-border">
-              <SelectValue />
+              <SelectValue placeholder="Select province or paper type" />
             </SelectTrigger>
             <SelectContent>
               {PROVINCES.map((p) => (
