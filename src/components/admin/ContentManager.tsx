@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import {
   ChevronLeft, ChevronRight, Plus, Trash2, Pencil, Save, X,
   BookOpen, Presentation, Lightbulb, HelpCircle, ClipboardList,
-  FileText, Upload, GraduationCap,
+  FileText, Upload, GraduationCap, Link as LinkIcon,
 } from "lucide-react";
+import FileDropZone from "@/components/admin/FileDropZone";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -293,6 +294,9 @@ const NotesEditor = ({ subjectId }: { subjectId: string }) => {
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ title: "", content: "" });
+  const [file, setFile] = useState<File | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     supabase.from("notes").select("*").eq("subject_id", subjectId).order("sort_order")
@@ -301,7 +305,28 @@ const NotesEditor = ({ subjectId }: { subjectId: string }) => {
 
   const save = async () => {
     if (!form.title) { toast({ title: "Title required", variant: "destructive" }); return; }
-    const payload = { title: form.title, content: form.content || null, subject_id: subjectId, sort_order: editing?.sort_order ?? notes.length };
+    
+    let uploadedUrl: string | null = null;
+    if (file) {
+      setUploading(true);
+      const ext = file.name.split(".").pop();
+      const path = `notes/${subjectId}/${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("content-files").upload(path, file);
+      if (uploadErr) { toast({ title: "Upload failed", description: uploadErr.message, variant: "destructive" }); setUploading(false); return; }
+      const { data: urlData } = supabase.storage.from("content-files").getPublicUrl(path);
+      uploadedUrl = urlData.publicUrl;
+      setUploading(false);
+    } else if (fileUrl) {
+      uploadedUrl = fileUrl;
+    }
+
+    // If a file was provided, prepend a link to the content
+    let finalContent = form.content || null;
+    if (uploadedUrl && !form.content.includes(uploadedUrl)) {
+      finalContent = `[📎 Attached File](${uploadedUrl})\n\n${form.content}`;
+    }
+
+    const payload = { title: form.title, content: finalContent, subject_id: subjectId, sort_order: editing?.sort_order ?? notes.length };
     if (editing) {
       const { error } = await supabase.from("notes").update(payload).eq("id", editing.id);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
@@ -313,6 +338,8 @@ const NotesEditor = ({ subjectId }: { subjectId: string }) => {
     }
     toast({ title: editing ? "Note updated" : "Note created" });
     setDialog(false);
+    setFile(null);
+    setFileUrl(null);
   };
 
   const remove = async (id: string) => {
@@ -327,7 +354,7 @@ const NotesEditor = ({ subjectId }: { subjectId: string }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="text-sm text-muted-foreground">{notes.length} notes</span>
-        <Button size="sm" onClick={() => { setEditing(null); setForm({ title: "", content: "" }); setDialog(true); }} className="gap-1">
+        <Button size="sm" onClick={() => { setEditing(null); setForm({ title: "", content: "" }); setFile(null); setFileUrl(null); setDialog(true); }} className="gap-1">
           <Plus className="h-3 w-3" /> Add Note
         </Button>
       </div>
@@ -338,7 +365,7 @@ const NotesEditor = ({ subjectId }: { subjectId: string }) => {
             {n.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.content.slice(0, 150)}…</p>}
           </div>
           <div className="flex gap-1">
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditing(n); setForm({ title: n.title, content: n.content || "" }); setDialog(true); }}>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditing(n); setForm({ title: n.title, content: n.content || "" }); setFile(null); setFileUrl(null); setDialog(true); }}>
               <Pencil className="h-3 w-3" />
             </Button>
             <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => remove(n.id)}>
@@ -352,8 +379,16 @@ const NotesEditor = ({ subjectId }: { subjectId: string }) => {
           <DialogHeader><DialogTitle>{editing ? "Edit Note" : "Add Note"}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-2"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>Content (Markdown supported)</Label><Textarea value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} rows={12} className="font-mono text-sm" /></div>
-            <Button onClick={save} className="w-full"><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Create"} Note</Button>
+            <div className="space-y-2"><Label>Content (Markdown supported)</Label><Textarea value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} rows={10} className="font-mono text-sm" /></div>
+            <FileDropZone
+              label="Attach File (optional)"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md"
+              onFileSelected={(f) => { setFile(f); setFileUrl(null); }}
+              onUrlProvided={(url) => { setFileUrl(url); setFile(null); }}
+            />
+            <Button onClick={save} disabled={uploading} className="w-full">
+              {uploading ? "Uploading…" : <><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Create"} Note</>}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -370,6 +405,7 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ title: "", content: "" });
   const [file, setFile] = useState<File | null>(null);
+  const [urlOverride, setUrlOverride] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -381,7 +417,9 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
     if (!form.title) { toast({ title: "Title required", variant: "destructive" }); return; }
     let fileUrl = editing?.file_url || null;
 
-    if (file) {
+    if (urlOverride) {
+      fileUrl = urlOverride;
+    } else if (file) {
       setUploading(true);
       const ext = file.name.split(".").pop();
       const path = `slides/${subjectId}/${Date.now()}.${ext}`;
@@ -405,6 +443,7 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
     toast({ title: editing ? "Slide updated" : "Slide created" });
     setDialog(false);
     setFile(null);
+    setUrlOverride(null);
   };
 
   const remove = async (id: string) => {
@@ -419,7 +458,7 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="text-sm text-muted-foreground">{items.length} slides</span>
-        <Button size="sm" onClick={() => { setEditing(null); setForm({ title: "", content: "" }); setFile(null); setDialog(true); }} className="gap-1">
+        <Button size="sm" onClick={() => { setEditing(null); setForm({ title: "", content: "" }); setFile(null); setUrlOverride(null); setDialog(true); }} className="gap-1">
           <Plus className="h-3 w-3" /> Add Slide
         </Button>
       </div>
@@ -433,7 +472,7 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
             {n.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.content.slice(0, 150)}…</p>}
           </div>
           <div className="flex gap-1">
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditing(n); setForm({ title: n.title, content: n.content || "" }); setFile(null); setDialog(true); }}>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditing(n); setForm({ title: n.title, content: n.content || "" }); setFile(null); setUrlOverride(null); setDialog(true); }}>
               <Pencil className="h-3 w-3" />
             </Button>
             <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => remove(n.id)}>
@@ -448,11 +487,13 @@ const SlidesEditor = ({ subjectId }: { subjectId: string }) => {
           <div className="space-y-4 pt-2">
             <div className="space-y-2"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Content (optional text)</Label><Textarea value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} rows={6} /></div>
-            <div className="space-y-2">
-              <Label>Upload File (PDF/PPT)</Label>
-              <Input type="file" accept=".pdf,.ppt,.pptx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              {editing?.file_url && <p className="text-xs text-muted-foreground">Current file: <a href={editing.file_url} target="_blank" className="text-primary hover:underline">View</a></p>}
-            </div>
+            <FileDropZone
+              label="Upload File (PDF/PPT)"
+              accept=".pdf,.ppt,.pptx"
+              currentFileUrl={editing?.file_url}
+              onFileSelected={(f) => { setFile(f); setUrlOverride(null); }}
+              onUrlProvided={(url) => { setUrlOverride(url); setFile(null); }}
+            />
             <Button onClick={save} disabled={uploading} className="w-full">
               {uploading ? "Uploading…" : <><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Create"} Slide</>}
             </Button>
@@ -472,6 +513,7 @@ const ExamplesEditor = ({ subjectId }: { subjectId: string }) => {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ title: "", content: "" });
   const [file, setFile] = useState<File | null>(null);
+  const [urlOverride, setUrlOverride] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
@@ -483,7 +525,9 @@ const ExamplesEditor = ({ subjectId }: { subjectId: string }) => {
     if (!form.title) { toast({ title: "Title required", variant: "destructive" }); return; }
     let fileUrl = editing?.file_url || null;
 
-    if (file) {
+    if (urlOverride) {
+      fileUrl = urlOverride;
+    } else if (file) {
       setUploading(true);
       const ext = file.name.split(".").pop();
       const path = `examples/${subjectId}/${Date.now()}.${ext}`;
@@ -507,6 +551,7 @@ const ExamplesEditor = ({ subjectId }: { subjectId: string }) => {
     toast({ title: editing ? "Example updated" : "Example created" });
     setDialog(false);
     setFile(null);
+    setUrlOverride(null);
   };
 
   const remove = async (id: string) => {
@@ -521,7 +566,7 @@ const ExamplesEditor = ({ subjectId }: { subjectId: string }) => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <span className="text-sm text-muted-foreground">{items.length} worked examples</span>
-        <Button size="sm" onClick={() => { setEditing(null); setForm({ title: "", content: "" }); setFile(null); setDialog(true); }} className="gap-1">
+        <Button size="sm" onClick={() => { setEditing(null); setForm({ title: "", content: "" }); setFile(null); setUrlOverride(null); setDialog(true); }} className="gap-1">
           <Plus className="h-3 w-3" /> Add Example
         </Button>
       </div>
@@ -535,7 +580,7 @@ const ExamplesEditor = ({ subjectId }: { subjectId: string }) => {
             {n.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.content.slice(0, 150)}…</p>}
           </div>
           <div className="flex gap-1">
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditing(n); setForm({ title: n.title, content: n.content || "" }); setFile(null); setDialog(true); }}>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => { setEditing(n); setForm({ title: n.title, content: n.content || "" }); setFile(null); setUrlOverride(null); setDialog(true); }}>
               <Pencil className="h-3 w-3" />
             </Button>
             <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => remove(n.id)}>
@@ -550,11 +595,13 @@ const ExamplesEditor = ({ subjectId }: { subjectId: string }) => {
           <div className="space-y-4 pt-2">
             <div className="space-y-2"><Label>Title</Label><Input value={form.title} onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Content (Markdown supported)</Label><Textarea value={form.content} onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))} rows={10} className="font-mono text-sm" /></div>
-            <div className="space-y-2">
-              <Label>Upload File (optional)</Label>
-              <Input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setFile(e.target.files?.[0] || null)} />
-              {editing?.file_url && <p className="text-xs text-muted-foreground">Current file: <a href={editing.file_url} target="_blank" className="text-primary hover:underline">View</a></p>}
-            </div>
+            <FileDropZone
+              label="Upload File (optional)"
+              accept=".pdf,.doc,.docx"
+              currentFileUrl={editing?.file_url}
+              onFileSelected={(f) => { setFile(f); setUrlOverride(null); }}
+              onUrlProvided={(url) => { setUrlOverride(url); setFile(null); }}
+            />
             <Button onClick={save} disabled={uploading} className="w-full">
               {uploading ? "Uploading…" : <><Save className="h-4 w-4 mr-1" /> {editing ? "Update" : "Create"} Example</>}
             </Button>
