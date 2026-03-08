@@ -260,6 +260,7 @@ const SubjectContentEditor = ({ subjectId }: { subjectId: string }) => {
         <TabsTrigger value="examples" className="flex items-center gap-1.5 text-sm"><Lightbulb className="h-4 w-4" />Examples</TabsTrigger>
         <TabsTrigger value="quizzes" className="flex items-center gap-1.5 text-sm"><HelpCircle className="h-4 w-4" />Quizzes</TabsTrigger>
         <TabsTrigger value="exams" className="flex items-center gap-1.5 text-sm"><ClipboardList className="h-4 w-4" />Exams</TabsTrigger>
+        <TabsTrigger value="exam-papers" className="flex items-center gap-1.5 text-sm"><Upload className="h-4 w-4" />Exam Papers</TabsTrigger>
       </TabsList>
 
       <TabsContent value="notes" className="mt-4">
@@ -276,6 +277,9 @@ const SubjectContentEditor = ({ subjectId }: { subjectId: string }) => {
       </TabsContent>
       <TabsContent value="exams" className="mt-4">
         <QuizContentEditor subjectId={subjectId} type="exam" />
+      </TabsContent>
+      <TabsContent value="exam-papers" className="mt-4">
+        <ExamPapersEditor subjectId={subjectId} />
       </TabsContent>
     </Tabs>
   );
