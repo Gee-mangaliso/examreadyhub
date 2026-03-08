@@ -15,6 +15,8 @@ interface Suggestion {
   message: string | null;
   read: boolean;
   created_at: string;
+  reply: string | null;
+  replied_at: string | null;
 }
 
 const contentTypeIcons: Record<string, typeof FileText> = {
