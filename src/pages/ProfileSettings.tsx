@@ -309,7 +309,11 @@ const ProfileSettings = () => {
                 <Label>Email</Label>
                 <Input value={user?.email || ""} disabled className="opacity-60" />
               </div>
-              {!isAdmin && (
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Input id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+27..." />
+              </div>
+              {!isAdmin && !isTeacher && (
                 <div className="space-y-2">
                   <Label>Preferred Grade</Label>
                   <Select value={grade} onValueChange={setGrade}>
