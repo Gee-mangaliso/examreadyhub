@@ -62,6 +62,7 @@ const ProfileSettings = () => {
     if (profile) {
       setFullName(profile.full_name || "");
       setGrade(profile.grade || "");
+      setPhoneNumber(profile.phone_number || "");
       setAvatarUrl(profile.avatar_url);
     }
     supabase.from("grades").select("id, name").order("sort_order")
