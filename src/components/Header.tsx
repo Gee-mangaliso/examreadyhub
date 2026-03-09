@@ -11,18 +11,21 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { theme, toggle } = useTheme();
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, isAdmin, isTeacher, signOut } = useAuth();
 
   const navLinks = [
     { to: "/", label: "Home" },
     ...(user ? [
       { to: "/leaderboard", label: "Leaderboard" },
-      ...(!isAdmin ? [{ to: "/dashboard", label: "Dashboard" }] : []),
+      ...(!isAdmin && !isTeacher ? [{ to: "/dashboard", label: "Dashboard" }] : []),
+      ...(!isAdmin && !isTeacher ? [{ to: "/invites", label: "Invites" }] : []),
+      ...(!isAdmin && !isTeacher ? [{ to: "/teacher-content", label: "Teacher Content" }] : []),
       { to: "/profile", label: "Profile" },
     ] : [
       { to: "/grades", label: "Grades" },
     ]),
     ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
+    ...(isTeacher ? [{ to: "/teacher", label: "Teacher" }] : []),
   ];
 
   const handleSignOut = async () => {
