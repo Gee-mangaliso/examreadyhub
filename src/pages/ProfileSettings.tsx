@@ -35,6 +35,7 @@ const ProfileSettings = () => {
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [grade, setGrade] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [grades, setGrades] = useState<Grade[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
