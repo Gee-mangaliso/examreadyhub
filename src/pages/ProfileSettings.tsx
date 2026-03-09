@@ -30,7 +30,7 @@ interface BadgeRow { id: string; awarded_at: string; badges: { name: string; ico
 interface ProgressRow { subject_id: string; notes_read: number; quizzes_completed: number; last_studied_at: string | null; subjects: { name: string } }
 
 const ProfileSettings = () => {
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, isAdmin, isTeacher, userRole, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
