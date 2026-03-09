@@ -26,28 +26,17 @@ const Login = () => {
 
     let loginEmail = email;
 
-    // If logging in with phone, find the email associated with that phone
+    // If logging in with phone, resolve email via edge function
     if (loginMethod === "phone") {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .eq("phone_number", phone)
-        .single();
-
-      if (!profileData) {
-        toast({ title: "Phone number not found", description: "No account with this phone number.", variant: "destructive" });
+      const { data, error: fnError } = await supabase.functions.invoke("phone-login", {
+        body: { phone_number: phone },
+      });
+      if (fnError || data?.error) {
+        toast({ title: "Login failed", description: data?.error || fnError?.message || "Phone not found", variant: "destructive" });
         setLoading(false);
         return;
       }
-
-      // We need to get the email from auth - but we can't query auth.users from client.
-      // Instead, we store in the profiles or use a function. For now, let's use edge function approach.
-      // Actually, the simplest approach: tell user to use email for now, or we look up via admin function.
-      // Let's use a different approach: store email in profiles too via a trigger.
-      // For now, let the user know they need to use the email associated with their phone.
-      toast({ title: "Login failed", description: "Phone login requires using the email associated with your account. Please use email login.", variant: "destructive" });
-      setLoading(false);
-      return;
+      loginEmail = data.email;
     }
 
     const { error } = await signIn(loginEmail, password);
