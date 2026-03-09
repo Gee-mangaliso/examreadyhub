@@ -30,11 +30,12 @@ interface BadgeRow { id: string; awarded_at: string; badges: { name: string; ico
 interface ProgressRow { subject_id: string; notes_read: number; quizzes_completed: number; last_studied_at: string | null; subjects: { name: string } }
 
 const ProfileSettings = () => {
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, isAdmin, isTeacher, userRole, signOut } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [fullName, setFullName] = useState("");
   const [grade, setGrade] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [grades, setGrades] = useState<Grade[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -61,6 +62,7 @@ const ProfileSettings = () => {
     if (profile) {
       setFullName(profile.full_name || "");
       setGrade(profile.grade || "");
+      setPhoneNumber(profile.phone_number || "");
       setAvatarUrl(profile.avatar_url);
     }
     supabase.from("grades").select("id, name").order("sort_order")
@@ -117,7 +119,7 @@ const ProfileSettings = () => {
     if (!user) return;
     setSaving(true);
     const { error } = await supabase.from("profiles")
-      .update({ full_name: fullName, grade: grade || null })
+      .update({ full_name: fullName, grade: grade || null, phone_number: phoneNumber || null })
       .eq("user_id", user.id);
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
@@ -206,9 +208,9 @@ const ProfileSettings = () => {
                   </div>
                   {/* Role badge */}
                   <div className="pt-1">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${isAdmin ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${isAdmin ? "bg-destructive/10 text-destructive" : isTeacher ? "bg-accent/10 text-accent-foreground" : "bg-primary/10 text-primary"}`}>
                       <Shield className="h-3 w-3" />
-                      {isAdmin ? "Administrator" : "Learner"}
+                      {isAdmin ? "Administrator" : isTeacher ? "Teacher" : "Learner"}
                     </span>
                   </div>
                 </div>
@@ -307,7 +309,11 @@ const ProfileSettings = () => {
                 <Label>Email</Label>
                 <Input value={user?.email || ""} disabled className="opacity-60" />
               </div>
-              {!isAdmin && (
+              <div className="space-y-2">
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Input id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+27..." />
+              </div>
+              {!isAdmin && !isTeacher && (
                 <div className="space-y-2">
                   <Label>Preferred Grade</Label>
                   <Select value={grade} onValueChange={setGrade}>

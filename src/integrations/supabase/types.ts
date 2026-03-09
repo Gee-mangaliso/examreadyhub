@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_completions: {
+        Row: {
+          activity_id: string
+          completed_at: string
+          id: string
+          notes: string | null
+          score: number | null
+          student_id: string
+        }
+        Insert: {
+          activity_id: string
+          completed_at?: string
+          id?: string
+          notes?: string | null
+          score?: number | null
+          student_id: string
+        }
+        Update: {
+          activity_id?: string
+          completed_at?: string
+          id?: string
+          notes?: string | null
+          score?: number | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_completions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_suggestions: {
         Row: {
           content_id: string
@@ -285,6 +320,57 @@ export type Database = {
         }
         Relationships: []
       }
+      lockdown_sessions: {
+        Row: {
+          activity_id: string | null
+          ended_at: string | null
+          id: string
+          quiz_id: string
+          started_at: string
+          status: string
+          user_id: string
+          violations: Json
+          webcam_enabled: boolean
+        }
+        Insert: {
+          activity_id?: string | null
+          ended_at?: string | null
+          id?: string
+          quiz_id: string
+          started_at?: string
+          status?: string
+          user_id: string
+          violations?: Json
+          webcam_enabled?: boolean
+        }
+        Update: {
+          activity_id?: string | null
+          ended_at?: string | null
+          id?: string
+          quiz_id?: string
+          started_at?: string
+          status?: string
+          user_id?: string
+          violations?: Json
+          webcam_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lockdown_sessions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "teacher_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lockdown_sessions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       memo_requests: {
         Row: {
           admin_note: string | null
@@ -397,6 +483,33 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_otps: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          otp_code: string
+          phone_number: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          otp_code: string
+          phone_number: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp_code?: string
+          phone_number?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -404,6 +517,7 @@ export type Database = {
           full_name: string | null
           grade: string | null
           id: string
+          phone_number: string | null
           updated_at: string
           user_id: string
         }
@@ -413,6 +527,7 @@ export type Database = {
           full_name?: string | null
           grade?: string | null
           id?: string
+          phone_number?: string | null
           updated_at?: string
           user_id: string
         }
@@ -422,6 +537,7 @@ export type Database = {
           full_name?: string | null
           grade?: string | null
           id?: string
+          phone_number?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -755,6 +871,151 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      teacher_activities: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          lockdown_required: boolean
+          quiz_id: string | null
+          teacher_id: string
+          title: string
+        }
+        Insert: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          lockdown_required?: boolean
+          quiz_id?: string | null
+          teacher_id: string
+          title: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          lockdown_required?: boolean
+          quiz_id?: string | null
+          teacher_id?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_activities_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_content: {
+        Row: {
+          content: string | null
+          content_type: string
+          created_at: string
+          file_url: string | null
+          id: string
+          subject_id: string | null
+          teacher_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          content_type?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          subject_id?: string | null
+          teacher_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          content_type?: string
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          subject_id?: string | null
+          teacher_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_content_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_invites: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          responded_at: string | null
+          status: string
+          student_email: string | null
+          student_id: string | null
+          student_phone: string | null
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string
+          student_email?: string | null
+          student_id?: string | null
+          student_phone?: string | null
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          responded_at?: string | null
+          status?: string
+          student_email?: string | null
+          student_id?: string | null
+          student_phone?: string | null
+          teacher_id?: string
+        }
+        Relationships: []
+      }
+      teacher_students: {
+        Row: {
+          created_at: string
+          id: string
+          student_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          student_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          student_id?: string
+          teacher_id?: string
+        }
+        Relationships: []
       }
       testimonials: {
         Row: {
@@ -1116,7 +1377,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "teacher"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1244,7 +1505,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "teacher"],
     },
   },
 } as const
