@@ -208,9 +208,9 @@ const ProfileSettings = () => {
                   </div>
                   {/* Role badge */}
                   <div className="pt-1">
-                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${isAdmin ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>
+                    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${isAdmin ? "bg-destructive/10 text-destructive" : isTeacher ? "bg-accent/10 text-accent-foreground" : "bg-primary/10 text-primary"}`}>
                       <Shield className="h-3 w-3" />
-                      {isAdmin ? "Administrator" : "Learner"}
+                      {isAdmin ? "Administrator" : isTeacher ? "Teacher" : "Learner"}
                     </span>
                   </div>
                 </div>
