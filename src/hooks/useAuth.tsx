@@ -11,12 +11,14 @@ interface BanInfo {
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  profile: { full_name: string; avatar_url: string | null; grade: string | null } | null;
+  profile: { full_name: string; avatar_url: string | null; grade: string | null; phone_number: string | null } | null;
   isAdmin: boolean;
+  isTeacher: boolean;
+  userRole: string;
   loading: boolean;
   banInfo: BanInfo | null;
   restrictions: any[];
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, role?: string, phoneNumber?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -34,6 +36,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isTeacher, setIsTeacher] = useState(false);
+  const [userRole, setUserRole] = useState("user");
   const [loading, setLoading] = useState(true);
   const [banInfo, setBanInfo] = useState<BanInfo | null>(null);
   const [restrictions, setRestrictions] = useState<any[]>([]);
@@ -41,17 +45,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, avatar_url, grade")
+      .select("full_name, avatar_url, grade, phone_number")
       .eq("user_id", userId)
       .single();
     setProfile(data);
 
-    // Check admin role
-    const { data: roleData } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "admin",
-    });
-    setIsAdmin(roleData === true);
+    // Check roles
+    const { data: adminData } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
+    const { data: teacherData } = await supabase.rpc("has_role", { _user_id: userId, _role: "teacher" });
+    setIsAdmin(adminData === true);
+    setIsTeacher(teacherData === true);
+    setUserRole(adminData === true ? "admin" : teacherData === true ? "teacher" : "user");
 
     // Check for active bans and restrictions
     const { data: restrictionsData } = await supabase
@@ -67,15 +71,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const activeBan = active.find((r: any) => r.restriction_type === "ban");
     if (activeBan) {
-      setBanInfo({
-        is_banned: true,
-        reason: activeBan.reason,
-        ends_at: activeBan.ends_at,
-      });
+      setBanInfo({ is_banned: true, reason: activeBan.reason, ends_at: activeBan.ends_at });
     } else {
       setBanInfo(null);
     }
-
     setRestrictions(active.filter((r: any) => r.restriction_type === "content_restriction"));
   };
 
@@ -103,12 +102,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role: string = "user", phoneNumber?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, role, phone_number: phoneNumber || null },
         emailRedirectTo: window.location.origin,
       },
     });
@@ -124,12 +123,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
     setProfile(null);
     setIsAdmin(false);
+    setIsTeacher(false);
+    setUserRole("user");
     setBanInfo(null);
     setRestrictions([]);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, isAdmin, loading, banInfo, restrictions, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, isAdmin, isTeacher, userRole, loading, banInfo, restrictions, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

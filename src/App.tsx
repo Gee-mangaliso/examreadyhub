@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AdminRoute from "@/components/AdminRoute";
+import TeacherRoute from "@/components/TeacherRoute";
 import Home from "./pages/Home";
 import Grades from "./pages/Grades";
 import Subjects from "./pages/Subjects";
@@ -19,6 +20,9 @@ import SubjectProgress from "./pages/SubjectProgress";
 import ProfileSettings from "./pages/ProfileSettings";
 import Leaderboard from "./pages/Leaderboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import StudentInvites from "./pages/StudentInvites";
+import TeacherContent from "./pages/TeacherContent";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import AIChatbot from "./components/AIChatbot";
@@ -41,7 +45,10 @@ const AnimatedRoutes = () => {
         <Route path="/profile" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
         <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
+        <Route path="/invites" element={<ProtectedRoute><StudentInvites /></ProtectedRoute>} />
+        <Route path="/teacher-content" element={<ProtectedRoute><TeacherContent /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
