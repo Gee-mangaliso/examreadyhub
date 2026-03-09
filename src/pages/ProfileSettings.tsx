@@ -119,7 +119,7 @@ const ProfileSettings = () => {
     if (!user) return;
     setSaving(true);
     const { error } = await supabase.from("profiles")
-      .update({ full_name: fullName, grade: grade || null })
+      .update({ full_name: fullName, grade: grade || null, phone_number: phoneNumber || null })
       .eq("user_id", user.id);
     if (error) {
       toast({ title: "Error saving", description: error.message, variant: "destructive" });
