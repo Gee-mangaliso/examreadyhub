@@ -8,10 +8,11 @@ import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import OTPVerification from "@/components/OTPVerification";
-import { GraduationCap, BookOpenCheck } from "lucide-react";
+import { GraduationCap, BookOpenCheck, Mail, Phone } from "lucide-react";
 
 const SignUp = () => {
   const [name, setName] = useState("");
+  const [regMethod, setRegMethod] = useState<"email" | "phone">("email");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -34,13 +35,18 @@ const SignUp = () => {
       toast({ title: "Password must be at least 6 characters", variant: "destructive" });
       return;
     }
-    if (!email) {
+
+    if (regMethod === "email" && !email) {
       toast({ title: "Email is required", variant: "destructive" });
       return;
     }
+    if (regMethod === "phone" && !phone) {
+      toast({ title: "Phone number is required", variant: "destructive" });
+      return;
+    }
 
-    // If phone provided but not verified, go to OTP step
-    if (phone && !phoneVerified) {
+    // Phone registration: verify OTP first
+    if (regMethod === "phone" && !phoneVerified) {
       setStep("otp");
       return;
     }
@@ -50,12 +56,18 @@ const SignUp = () => {
 
   const doSignUp = async () => {
     setLoading(true);
-    const { error } = await signUp(email, password, name, role, phone || undefined);
+    // For phone registration, we generate a placeholder email
+    const signUpEmail = regMethod === "email" ? email : `${phone.replace(/\+/g, "")}@phone.examready.local`;
+    const { error } = await signUp(signUpEmail, password, name, role, regMethod === "phone" ? phone : undefined);
     setLoading(false);
     if (error) {
       toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Check your email", description: "We sent you a confirmation link." });
+      if (regMethod === "email") {
+        toast({ title: "Check your email", description: "We sent you a confirmation link." });
+      } else {
+        toast({ title: "Account created!", description: "You can now log in with your phone number." });
+      }
       navigate("/login");
     }
   };
@@ -130,20 +142,47 @@ const SignUp = () => {
               </button>
             </div>
 
+            {/* Registration Method Toggle */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg">
+              <button
+                type="button"
+                onClick={() => setRegMethod("email")}
+                className={`flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
+                  regMethod === "email" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <Mail className="h-4 w-4" />Email
+              </button>
+              <button
+                type="button"
+                onClick={() => setRegMethod("phone")}
+                className={`flex items-center justify-center gap-2 py-2 rounded-md text-sm font-medium transition-all ${
+                  regMethod === "phone" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <Phone className="h-4 w-4" />Phone
+              </button>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number (optional)</Label>
-                <Input id="phone" type="tel" placeholder="+27..." value={phone} onChange={(e) => setPhone(e.target.value)} />
-                {phoneVerified && <p className="text-xs text-emerald-600 flex items-center gap-1">✓ Phone verified</p>}
-              </div>
+
+              {regMethod === "email" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input id="phone" type="tel" placeholder="+27..." value={phone} onChange={(e) => setPhone(e.target.value)} required />
+                  {phoneVerified && <p className="text-xs text-emerald-600 flex items-center gap-1">✓ Phone verified</p>}
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />

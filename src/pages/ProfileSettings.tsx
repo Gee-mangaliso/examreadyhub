@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   User, Camera, Save, LogOut, Trash2, Shield, BookOpen, Trophy,
-  Award, Flame, BarChart3, Clock, Mail, GraduationCap, Loader2, Eye, EyeOff,
+  Award, Flame, BarChart3, Clock, Mail, GraduationCap, Loader2, Eye, EyeOff, Phone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
@@ -24,6 +24,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import OTPVerification from "@/components/OTPVerification";
 
 interface Grade { id: string; name: string }
 interface BadgeRow { id: string; awarded_at: string; badges: { name: string; icon: string; description: string | null } }
@@ -36,10 +37,18 @@ const ProfileSettings = () => {
   const [fullName, setFullName] = useState("");
   const [grade, setGrade] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [newEmail, setNewEmail] = useState("");
   const [grades, setGrades] = useState<Grade[]>([]);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Phone verification on profile
+  const [showPhoneVerify, setShowPhoneVerify] = useState(false);
+  const [pendingPhone, setPendingPhone] = useState("");
+
+  // Email update
+  const [emailUpdating, setEmailUpdating] = useState(false);
 
   // Stats
   const [streak, setStreak] = useState(0);
@@ -73,7 +82,6 @@ const ProfileSettings = () => {
     if (!user) return;
     setJoinedDate(new Date(user.created_at).toLocaleDateString("en-ZA", { year: "numeric", month: "long", day: "numeric" }));
 
-    // Fetch all stats in parallel
     Promise.all([
       supabase.rpc("get_study_streak", { _user_id: user.id }),
       supabase.from("user_badges").select("id, awarded_at, badges(name, icon, description)").eq("user_id", user.id),
@@ -129,6 +137,37 @@ const ProfileSettings = () => {
     setSaving(false);
   };
 
+  const handleUpdateEmail = async () => {
+    if (!newEmail.trim()) return;
+    setEmailUpdating(true);
+    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    setEmailUpdating(false);
+    if (error) {
+      toast({ title: "Email update failed", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Check your new email", description: "We sent a confirmation link to verify the change." });
+      setNewEmail("");
+    }
+  };
+
+  const handleAddPhone = () => {
+    if (!pendingPhone.trim()) {
+      toast({ title: "Enter a phone number", variant: "destructive" });
+      return;
+    }
+    setShowPhoneVerify(true);
+  };
+
+  const handlePhoneVerified = async () => {
+    setPhoneNumber(pendingPhone);
+    setShowPhoneVerify(false);
+    if (user) {
+      await supabase.from("profiles").update({ phone_number: pendingPhone }).eq("user_id", user.id);
+    }
+    toast({ title: "Phone number added!" });
+    setPendingPhone("");
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/");
@@ -137,21 +176,15 @@ const ProfileSettings = () => {
   const handleDeleteAccount = async () => {
     if (!user || !deletePassword) return;
     setDeleteLoading(true);
-
-    // Verify password by re-authenticating
     const { error: authError } = await supabase.auth.signInWithPassword({
       email: user.email!,
       password: deletePassword,
     });
-
     if (authError) {
       toast({ title: "Incorrect password", description: "Please enter your correct password to confirm.", variant: "destructive" });
       setDeleteLoading(false);
       return;
     }
-
-    // Delete user data (profiles, subjects, etc. cascade from auth.users)
-    // We sign out and inform — actual account deletion requires admin/service role
     await signOut();
     toast({ title: "Account deletion requested", description: "Your session has been ended. Contact support if you need full data removal." });
     setDeleteLoading(false);
@@ -172,7 +205,6 @@ const ProfileSettings = () => {
             {/* Profile Header Card */}
             <div className="bg-card border border-border rounded-xl p-6 shadow-card">
               <div className="flex flex-col sm:flex-row items-center gap-6">
-                {/* Avatar */}
                 <div className="relative">
                   <div className="w-28 h-28 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border-2 border-border">
                     {avatarUrl ? (
@@ -192,10 +224,18 @@ const ProfileSettings = () => {
 
                 <div className="flex-1 text-center sm:text-left space-y-1">
                   <h1 className="text-2xl font-heading text-foreground">{profile?.full_name || "Learner"}</h1>
-                  <div className="flex items-center gap-2 justify-center sm:justify-start text-sm text-muted-foreground">
-                    <Mail className="h-3.5 w-3.5" />
-                    {user?.email}
-                  </div>
+                  {user?.email && !user.email.endsWith("@phone.examready.local") && (
+                    <div className="flex items-center gap-2 justify-center sm:justify-start text-sm text-muted-foreground">
+                      <Mail className="h-3.5 w-3.5" />
+                      {user.email}
+                    </div>
+                  )}
+                  {profile?.phone_number && (
+                    <div className="flex items-center gap-2 justify-center sm:justify-start text-sm text-muted-foreground">
+                      <Phone className="h-3.5 w-3.5" />
+                      {profile.phone_number}
+                    </div>
+                  )}
                   {profile?.grade && (
                     <div className="flex items-center gap-2 justify-center sm:justify-start text-sm text-muted-foreground">
                       <GraduationCap className="h-3.5 w-3.5" />
@@ -206,7 +246,6 @@ const ProfileSettings = () => {
                     <Clock className="h-3.5 w-3.5" />
                     Joined {joinedDate}
                   </div>
-                  {/* Role badge */}
                   <div className="pt-1">
                     <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${isAdmin ? "bg-destructive/10 text-destructive" : isTeacher ? "bg-accent/10 text-accent-foreground" : "bg-primary/10 text-primary"}`}>
                       <Shield className="h-3 w-3" />
@@ -215,7 +254,6 @@ const ProfileSettings = () => {
                   </div>
                 </div>
               </div>
-
               {uploading && <p className="text-xs text-muted-foreground text-center mt-2">Uploading avatar...</p>}
             </div>
 
@@ -283,7 +321,7 @@ const ProfileSettings = () => {
                 <div className="space-y-4">
                   {progressData.map((p) => {
                     const total = p.notes_read + p.quizzes_completed;
-                    const pct = Math.min(total * 10, 100); // rough progress
+                    const pct = Math.min(total * 10, 100);
                     return (
                       <div key={p.subject_id} className="space-y-1.5">
                         <div className="flex items-center justify-between text-sm">
@@ -305,14 +343,60 @@ const ProfileSettings = () => {
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" />
               </div>
+
+              {/* Email section */}
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input value={user?.email || ""} disabled className="opacity-60" />
+                {user?.email && !user.email.endsWith("@phone.examready.local") ? (
+                  <Input value={user.email} disabled className="opacity-60" />
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">No email linked. Add one to receive notifications.</p>
+                    <div className="flex gap-2">
+                      <Input
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="you@example.com"
+                      />
+                      <Button onClick={handleUpdateEmail} disabled={emailUpdating} size="sm">
+                        {emailUpdating ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
+
+              {/* Phone section */}
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input id="phoneNumber" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+27..." />
+                {phoneNumber ? (
+                  <div className="flex items-center gap-2">
+                    <Input value={phoneNumber} disabled className="opacity-60" />
+                    <span className="text-xs text-emerald-600 whitespace-nowrap">✓ Verified</span>
+                  </div>
+                ) : (
+                  <>
+                    {!showPhoneVerify ? (
+                      <div className="flex gap-2">
+                        <Input
+                          value={pendingPhone}
+                          onChange={(e) => setPendingPhone(e.target.value)}
+                          placeholder="+27..."
+                          type="tel"
+                        />
+                        <Button onClick={handleAddPhone} size="sm">Verify</Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 border border-border rounded-lg p-4">
+                        <OTPVerification phoneNumber={pendingPhone} onVerified={handlePhoneVerified} />
+                        <Button variant="ghost" size="sm" onClick={() => setShowPhoneVerify(false)} className="w-full">Cancel</Button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
+
               {!isAdmin && !isTeacher && (
                 <div className="space-y-2">
                   <Label>Preferred Grade</Label>
@@ -372,30 +456,31 @@ const ProfileSettings = () => {
               This action is permanent. All your data including progress, quiz history, and badges will be lost. Please enter your password to confirm.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-3 py-2">
-            <Label htmlFor="delete-password">Confirm Password</Label>
-            <div className="relative">
-              <Input
-                id="delete-password"
-                type={showPassword ? "text" : "password"}
-                value={deletePassword}
-                onChange={(e) => setDeletePassword(e.target.value)}
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Password</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Enter your password"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setDeleteOpen(false); setDeletePassword(""); }}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteAccount} disabled={!deletePassword || deleteLoading} className="gap-2">
-              {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-              {deleteLoading ? "Deleting..." : "Delete My Account"}
+            <Button variant="ghost" onClick={() => setDeleteOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleteLoading || !deletePassword}>
+              {deleteLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Trash2 className="h-4 w-4 mr-2" />}
+              Delete My Account
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -405,10 +490,10 @@ const ProfileSettings = () => {
 };
 
 const StatCard = ({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) => (
-  <div className="bg-card border border-border rounded-xl p-4 shadow-card flex flex-col items-center gap-2 text-center">
-    {icon}
-    <span className="text-xl font-heading text-foreground">{value}</span>
-    <span className="text-xs text-muted-foreground">{label}</span>
+  <div className="bg-card border border-border rounded-lg p-4 shadow-card text-center">
+    <div className="flex justify-center mb-2">{icon}</div>
+    <p className="text-xs text-muted-foreground">{label}</p>
+    <p className="text-xl font-bold text-foreground">{value}</p>
   </div>
 );
 
