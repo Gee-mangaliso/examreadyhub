@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, BookOpen, Activity, Send, Plus, ChevronLeft, Clock, CheckCircle, XCircle, Trash2, Eye, GraduationCap, FileText, Loader2 } from "lucide-react";
+import { Users, BookOpen, Activity, Send, Plus, Clock, CheckCircle, XCircle, Trash2, GraduationCap, FileText, Loader2, ClipboardList, Lock } from "lucide-react";
 import { format } from "date-fns";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
@@ -46,7 +46,15 @@ interface ActivityItem {
   activity_type: string;
   due_date: string | null;
   lockdown_required: boolean;
+  quiz_id: string | null;
   created_at: string;
+}
+
+interface QuizQuestion {
+  question: string;
+  options: string[];
+  correct_answer: string;
+  explanation: string;
 }
 
 const TeacherDashboard = () => {
@@ -82,17 +90,30 @@ const TeacherDashboard = () => {
   const [actLockdown, setActLockdown] = useState(false);
   const [actSaving, setActSaving] = useState(false);
 
+  // Quiz creation
+  const [quizOpen, setQuizOpen] = useState(false);
+  const [quizTitle, setQuizTitle] = useState("");
+  const [quizDesc, setQuizDesc] = useState("");
+  const [quizTimeLimit, setQuizTimeLimit] = useState("");
+  const [quizSubjectId, setQuizSubjectId] = useState("");
+  const [quizLockdown, setQuizLockdown] = useState(false);
+  const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([
+    { question: "", options: ["", "", "", ""], correct_answer: "", explanation: "" },
+  ]);
+  const [quizSaving, setQuizSaving] = useState(false);
+  const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
+
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
-      const [studentsRes, invitesRes, contentRes, activitiesRes] = await Promise.all([
+      const [studentsRes, invitesRes, contentRes, activitiesRes, subjectsRes] = await Promise.all([
         supabase.from("teacher_students").select("id, student_id, created_at").eq("teacher_id", user.id),
         supabase.from("teacher_invites").select("*").eq("teacher_id", user.id).order("created_at", { ascending: false }),
         supabase.from("teacher_content").select("*").eq("teacher_id", user.id).order("created_at", { ascending: false }),
         supabase.from("teacher_activities").select("*").eq("teacher_id", user.id).order("created_at", { ascending: false }),
+        supabase.from("subjects").select("id, name").order("name"),
       ]);
 
-      // Fetch student profiles
       const studentIds = (studentsRes.data || []).map((s: any) => s.student_id);
       let profiles: any[] = [];
       if (studentIds.length > 0) {
@@ -100,15 +121,14 @@ const TeacherDashboard = () => {
         profiles = p || [];
       }
 
-      const enrichedStudents = (studentsRes.data || []).map((s: any) => ({
+      setStudents((studentsRes.data || []).map((s: any) => ({
         ...s,
         profile: profiles.find((p: any) => p.user_id === s.student_id),
-      }));
-
-      setStudents(enrichedStudents);
+      })));
       setInvites((invitesRes.data || []) as Invite[]);
       setContent((contentRes.data || []) as TeacherContentItem[]);
       setActivities((activitiesRes.data || []) as ActivityItem[]);
+      setSubjects((subjectsRes.data || []) as { id: string; name: string }[]);
       setLoading(false);
     };
     fetchAll();
@@ -120,22 +140,12 @@ const TeacherDashboard = () => {
       return;
     }
     setInviteSending(true);
-
-    // Check if student exists by email or phone
-    let studentId = null;
-    if (inviteEmail) {
-      // We can't query auth.users, so check profiles... but email is in auth.
-      // We'll leave student_id null and resolve via trigger on signup or manually
-    }
-
     const { error } = await supabase.from("teacher_invites").insert({
       teacher_id: user!.id,
       student_email: inviteEmail || null,
       student_phone: invitePhone || null,
-      student_id: studentId,
       message: inviteMsg || null,
     });
-
     setInviteSending(false);
     if (error) {
       toast({ title: "Failed to send invite", description: error.message, variant: "destructive" });
@@ -145,7 +155,6 @@ const TeacherDashboard = () => {
       setInviteEmail("");
       setInvitePhone("");
       setInviteMsg("");
-      // Refresh invites
       const { data } = await supabase.from("teacher_invites").select("*").eq("teacher_id", user!.id).order("created_at", { ascending: false });
       setInvites((data || []) as Invite[]);
     }
@@ -203,6 +212,95 @@ const TeacherDashboard = () => {
     }
   };
 
+  const createQuiz = async () => {
+    if (!quizTitle.trim() || !quizSubjectId) {
+      toast({ title: "Title and subject are required", variant: "destructive" });
+      return;
+    }
+    const validQuestions = quizQuestions.filter(q => q.question.trim() && q.correct_answer.trim());
+    if (validQuestions.length === 0) {
+      toast({ title: "Add at least one question", variant: "destructive" });
+      return;
+    }
+
+    setQuizSaving(true);
+
+    // 1. Create the quiz
+    const { data: quizData, error: quizError } = await supabase.from("quizzes").insert({
+      title: quizTitle,
+      description: quizDesc || null,
+      subject_id: quizSubjectId,
+      time_limit_minutes: quizTimeLimit ? parseInt(quizTimeLimit) : null,
+      type: "quiz",
+    }).select("id").single();
+
+    if (quizError || !quizData) {
+      toast({ title: "Failed to create quiz", description: quizError?.message, variant: "destructive" });
+      setQuizSaving(false);
+      return;
+    }
+
+    // 2. Insert questions
+    const questionsToInsert = validQuestions.map((q, i) => ({
+      quiz_id: quizData.id,
+      question: q.question,
+      options: q.options.filter(o => o.trim()),
+      correct_answer: q.correct_answer,
+      explanation: q.explanation || null,
+      sort_order: i,
+    }));
+
+    const { error: qError } = await supabase.from("quiz_questions").insert(questionsToInsert);
+    if (qError) {
+      toast({ title: "Quiz created but questions failed", description: qError.message, variant: "destructive" });
+      setQuizSaving(false);
+      return;
+    }
+
+    // 3. Optionally create activity with lockdown
+    if (quizLockdown) {
+      await supabase.from("teacher_activities").insert({
+        teacher_id: user!.id,
+        title: `Lockdown Exam: ${quizTitle}`,
+        description: quizDesc || null,
+        activity_type: "quiz",
+        quiz_id: quizData.id,
+        lockdown_required: true,
+      });
+      const { data: actData } = await supabase.from("teacher_activities").select("*").eq("teacher_id", user!.id).order("created_at", { ascending: false });
+      setActivities((actData || []) as ActivityItem[]);
+    }
+
+    toast({ title: "Quiz created!", description: `${validQuestions.length} questions added${quizLockdown ? " (lockdown exam)" : ""}` });
+    setQuizOpen(false);
+    setQuizTitle("");
+    setQuizDesc("");
+    setQuizTimeLimit("");
+    setQuizSubjectId("");
+    setQuizLockdown(false);
+    setQuizQuestions([{ question: "", options: ["", "", "", ""], correct_answer: "", explanation: "" }]);
+    setQuizSaving(false);
+  };
+
+  const addQuestion = () => {
+    setQuizQuestions(prev => [...prev, { question: "", options: ["", "", "", ""], correct_answer: "", explanation: "" }]);
+  };
+
+  const updateQuestion = (idx: number, field: keyof QuizQuestion, value: any) => {
+    setQuizQuestions(prev => prev.map((q, i) => i === idx ? { ...q, [field]: value } : q));
+  };
+
+  const updateOption = (qIdx: number, oIdx: number, value: string) => {
+    setQuizQuestions(prev => prev.map((q, i) =>
+      i === qIdx ? { ...q, options: q.options.map((o, j) => j === oIdx ? value : o) } : q
+    ));
+  };
+
+  const removeQuestion = (idx: number) => {
+    if (quizQuestions.length <= 1) return;
+    setQuizQuestions(prev => prev.filter((_, i) => i !== idx));
+  };
+
   const deleteInvite = async (id: string) => {
     await supabase.from("teacher_invites").delete().eq("id", id);
     setInvites((prev) => prev.filter((i) => i.id !== id));
@@ -242,7 +340,7 @@ const TeacherDashboard = () => {
           <div className="max-w-6xl mx-auto">
             <div className="mb-8">
               <h1 className="text-3xl font-heading text-foreground">Teacher Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage your students, content, and activities</p>
+              <p className="text-muted-foreground mt-1">Manage your students, content, quizzes, and activities</p>
             </div>
 
             {/* Quick Stats */}
@@ -270,6 +368,7 @@ const TeacherDashboard = () => {
                 <TabsTrigger value="students"><Users className="h-4 w-4 mr-1" />Students</TabsTrigger>
                 <TabsTrigger value="invites"><Send className="h-4 w-4 mr-1" />Invites</TabsTrigger>
                 <TabsTrigger value="content"><BookOpen className="h-4 w-4 mr-1" />Content</TabsTrigger>
+                <TabsTrigger value="quizzes"><ClipboardList className="h-4 w-4 mr-1" />Quizzes</TabsTrigger>
                 <TabsTrigger value="activities"><Activity className="h-4 w-4 mr-1" />Activities</TabsTrigger>
               </TabsList>
 
@@ -363,6 +462,17 @@ const TeacherDashboard = () => {
                 )}
               </TabsContent>
 
+              {/* Quizzes Tab */}
+              <TabsContent value="quizzes" className="space-y-4">
+                <div className="flex justify-end">
+                  <Button onClick={() => setQuizOpen(true)}><Plus className="h-4 w-4 mr-2" />Create Quiz</Button>
+                </div>
+                <div className="text-center py-8 text-muted-foreground">
+                  <ClipboardList className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                  <p>Create quizzes and assign them as lockdown exams for your students.</p>
+                </div>
+              </TabsContent>
+
               {/* Activities Tab */}
               <TabsContent value="activities" className="space-y-4">
                 <div className="flex justify-end">
@@ -377,7 +487,7 @@ const TeacherDashboard = () => {
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <h3 className="font-medium text-foreground">{a.title}</h3>
-                            {a.lockdown_required && <Badge variant="destructive" className="text-xs">Lockdown</Badge>}
+                            {a.lockdown_required && <Badge variant="destructive" className="text-xs"><Lock className="h-3 w-3 mr-1" />Lockdown</Badge>}
                           </div>
                           {a.description && <p className="text-sm text-muted-foreground">{a.description}</p>}
                           <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -500,6 +610,119 @@ const TeacherDashboard = () => {
             <Button onClick={createActivity} disabled={actSaving}>
               {actSaving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Plus className="h-4 w-4 mr-2" />}
               Create
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quiz Creation Dialog */}
+      <Dialog open={quizOpen} onOpenChange={setQuizOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardList className="h-5 w-5" />Create Quiz
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            {/* Quiz details */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Quiz Title</Label>
+                <Input value={quizTitle} onChange={(e) => setQuizTitle(e.target.value)} placeholder="e.g. Chapter 5 Assessment" />
+              </div>
+              <div className="space-y-2">
+                <Label>Subject</Label>
+                <Select value={quizSubjectId} onValueChange={setQuizSubjectId}>
+                  <SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger>
+                  <SelectContent>
+                    {subjects.map(s => (
+                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Time Limit (minutes)</Label>
+                <Input type="number" value={quizTimeLimit} onChange={(e) => setQuizTimeLimit(e.target.value)} placeholder="Optional" />
+              </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label>Description (optional)</Label>
+                <Textarea value={quizDesc} onChange={(e) => setQuizDesc(e.target.value)} placeholder="Quiz instructions..." rows={2} />
+              </div>
+              <div className="flex items-center gap-3 sm:col-span-2">
+                <Switch checked={quizLockdown} onCheckedChange={setQuizLockdown} />
+                <div>
+                  <Label className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" />Assign as lockdown exam
+                  </Label>
+                  <p className="text-xs text-muted-foreground">Students must complete in lockdown browser with webcam</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Questions */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base font-semibold">Questions ({quizQuestions.length})</Label>
+                <Button variant="outline" size="sm" onClick={addQuestion}>
+                  <Plus className="h-4 w-4 mr-1" />Add Question
+                </Button>
+              </div>
+
+              {quizQuestions.map((q, qIdx) => (
+                <div key={qIdx} className="border border-border rounded-lg p-4 space-y-3 bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Question {qIdx + 1}</span>
+                    {quizQuestions.length > 1 && (
+                      <Button variant="ghost" size="sm" onClick={() => removeQuestion(qIdx)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                  <Input
+                    placeholder="Enter question..."
+                    value={q.question}
+                    onChange={(e) => updateQuestion(qIdx, "question", e.target.value)}
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    {q.options.map((opt, oIdx) => (
+                      <Input
+                        key={oIdx}
+                        placeholder={`Option ${String.fromCharCode(65 + oIdx)}`}
+                        value={opt}
+                        onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
+                      />
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Correct Answer</Label>
+                      <Select value={q.correct_answer} onValueChange={(v) => updateQuestion(qIdx, "correct_answer", v)}>
+                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                        <SelectContent>
+                          {q.options.filter(o => o.trim()).map((o, i) => (
+                            <SelectItem key={i} value={o}>{o}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Explanation (optional)</Label>
+                      <Input
+                        placeholder="Why this is correct..."
+                        value={q.explanation}
+                        onChange={(e) => updateQuestion(qIdx, "explanation", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={createQuiz} disabled={quizSaving} className="gap-2">
+              {quizSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <ClipboardList className="h-4 w-4" />}
+              Create Quiz{quizLockdown ? " (Lockdown)" : ""}
             </Button>
           </DialogFooter>
         </DialogContent>
