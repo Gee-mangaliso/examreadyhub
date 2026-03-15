@@ -181,6 +181,50 @@ const ProfileSettings = () => {
     navigate("/");
   };
 
+  const fetchAdminList = async () => {
+    setAdminListLoading(true);
+    const { data, error } = await supabase.functions.invoke("manage-admin", {
+      body: { action: "list" },
+    });
+    setAdminListLoading(false);
+    if (!error && data?.admins) setAdminList(data.admins);
+  };
+
+  const handleAddAdmin = async () => {
+    if (!adminEmail.trim()) {
+      toast({ title: "Enter an email address", variant: "destructive" });
+      return;
+    }
+    setAdminLoading(true);
+    const { data, error } = await supabase.functions.invoke("manage-admin", {
+      body: { action: "add", email: adminEmail },
+    });
+    setAdminLoading(false);
+    if (error || data?.error) {
+      toast({ title: "Failed to add admin", description: data?.error || error?.message, variant: "destructive" });
+    } else {
+      toast({ title: "Admin added!", description: data.message });
+      setAdminEmail("");
+      fetchAdminList();
+    }
+  };
+
+  const handleRemoveAdmin = async (email: string) => {
+    const { data, error } = await supabase.functions.invoke("manage-admin", {
+      body: { action: "remove", email },
+    });
+    if (error || data?.error) {
+      toast({ title: "Failed to remove admin", description: data?.error || error?.message, variant: "destructive" });
+    } else {
+      toast({ title: "Admin removed", description: data.message });
+      fetchAdminList();
+    }
+  };
+
+  useEffect(() => {
+    if (isAdmin) fetchAdminList();
+  }, [isAdmin]);
+
   const handleDeleteAccount = async () => {
     if (!user || !deletePassword) return;
     setDeleteLoading(true);
