@@ -23,6 +23,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentInvites from "./pages/StudentInvites";
 import TeacherContent from "./pages/TeacherContent";
+import TakeQuiz from "./pages/TakeQuiz";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import AIChatbot from "./components/AIChatbot";
