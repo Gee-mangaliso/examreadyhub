@@ -22,6 +22,7 @@ import QuizHistory from "@/components/dashboard/QuizHistory";
 import SuggestionsPanel from "@/components/dashboard/SuggestionsPanel";
 import RecentlyAddedContent from "@/components/dashboard/RecentlyAddedContent";
 import RateExperience from "@/components/RateExperience";
+import TeacherQuizzes from "@/components/dashboard/TeacherQuizzes";
 
 interface Grade { id: string; name: string; sort_order: number }
 interface Subject { id: string; name: string; icon: string | null; grade_id: string }
@@ -237,6 +238,8 @@ const Dashboard = () => {
             )}
 
             <RecentlyAddedContent mySubjects={mySubjects} grades={grades} onContentLoaded={setRecentContent} />
+
+            <TeacherQuizzes />
 
             {/* Stats grid */}
             <div className="grid sm:grid-cols-2 gap-6 mt-10">

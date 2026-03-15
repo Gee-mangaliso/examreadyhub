@@ -23,6 +23,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentInvites from "./pages/StudentInvites";
 import TeacherContent from "./pages/TeacherContent";
+import TakeQuiz from "./pages/TakeQuiz";
 import Notifications from "./pages/Notifications";
 import NotFound from "./pages/NotFound";
 import AIChatbot from "./components/AIChatbot";
@@ -47,6 +48,7 @@ const AnimatedRoutes = () => {
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/invites" element={<ProtectedRoute><StudentInvites /></ProtectedRoute>} />
         <Route path="/teacher-content" element={<ProtectedRoute><TeacherContent /></ProtectedRoute>} />
+        <Route path="/take-quiz/:quizId" element={<ProtectedRoute><TakeQuiz /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
         <Route path="*" element={<NotFound />} />
