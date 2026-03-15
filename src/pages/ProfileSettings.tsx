@@ -30,6 +30,7 @@ import OTPVerification from "@/components/OTPVerification";
 interface Grade { id: string; name: string }
 interface BadgeRow { id: string; awarded_at: string; badges: { name: string; icon: string; description: string | null } }
 interface ProgressRow { subject_id: string; notes_read: number; quizzes_completed: number; last_studied_at: string | null; subjects: { name: string } }
+interface AdminUser { id: string; email: string; created_at: string }
 
 const ProfileSettings = () => {
   const { user, profile, isAdmin, isTeacher, userRole, signOut } = useAuth();
