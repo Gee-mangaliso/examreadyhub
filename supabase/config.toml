@@ -20,3 +20,9 @@ verify_jwt = false
 
 [functions.phone-login]
 verify_jwt = false
+
+[functions.manage-admin]
+verify_jwt = false
+
+[functions.phone-signup]
+verify_jwt = false
