@@ -48,6 +48,7 @@ const AnimatedRoutes = () => {
         <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
         <Route path="/invites" element={<ProtectedRoute><StudentInvites /></ProtectedRoute>} />
         <Route path="/teacher-content" element={<ProtectedRoute><TeacherContent /></ProtectedRoute>} />
+        <Route path="/take-quiz/:quizId" element={<ProtectedRoute><TakeQuiz /></ProtectedRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
         <Route path="*" element={<NotFound />} />
