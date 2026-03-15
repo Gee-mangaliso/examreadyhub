@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
 import OTPVerification from "@/components/OTPVerification";
+import { supabase } from "@/integrations/supabase/client";
 import { GraduationCap, BookOpenCheck, Mail, Phone } from "lucide-react";
 
 const SignUp = () => {
@@ -20,7 +21,6 @@ const SignUp = () => {
   const [role, setRole] = useState<"user" | "teacher">("user");
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<"form" | "otp">("form");
-  const [phoneVerified, setPhoneVerified] = useState(false);
   const { signUp } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -36,38 +36,45 @@ const SignUp = () => {
       return;
     }
 
-    if (regMethod === "email" && !email) {
-      toast({ title: "Email is required", variant: "destructive" });
-      return;
-    }
-    if (regMethod === "phone" && !phone) {
-      toast({ title: "Phone number is required", variant: "destructive" });
-      return;
-    }
-
-    // Phone registration: verify OTP first
-    if (regMethod === "phone" && !phoneVerified) {
+    if (regMethod === "email") {
+      if (!email) {
+        toast({ title: "Email is required", variant: "destructive" });
+        return;
+      }
+      await doEmailSignUp();
+    } else {
+      if (!phone) {
+        toast({ title: "Phone number is required", variant: "destructive" });
+        return;
+      }
+      // Go to OTP step first
       setStep("otp");
-      return;
     }
-
-    await doSignUp();
   };
 
-  const doSignUp = async () => {
+  const doEmailSignUp = async () => {
     setLoading(true);
-    // For phone registration, we generate a placeholder email
-    const signUpEmail = regMethod === "email" ? email : `${phone.replace(/\+/g, "")}@phone.examready.local`;
-    const { error } = await signUp(signUpEmail, password, name, role, regMethod === "phone" ? phone : undefined);
+    const { error } = await signUp(email, password, name, role);
     setLoading(false);
     if (error) {
       toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
     } else {
-      if (regMethod === "email") {
-        toast({ title: "Check your email", description: "We sent you a confirmation link." });
-      } else {
-        toast({ title: "Account created!", description: "You can now log in with your phone number." });
-      }
+      toast({ title: "Check your email", description: "We sent you a confirmation link to verify your email." });
+      navigate("/login");
+    }
+  };
+
+  const doPhoneSignUp = async () => {
+    setLoading(true);
+    // Use the phone-signup edge function which creates user with auto-confirm
+    const { data, error } = await supabase.functions.invoke("phone-signup", {
+      body: { phone_number: phone, password, full_name: name, role },
+    });
+    setLoading(false);
+    if (error || data?.error) {
+      toast({ title: "Sign up failed", description: data?.error || error?.message, variant: "destructive" });
+    } else {
+      toast({ title: "Account created!", description: "You can now log in with your phone number." });
       navigate("/login");
     }
   };
@@ -86,9 +93,7 @@ const SignUp = () => {
               <OTPVerification
                 phoneNumber={phone}
                 onVerified={() => {
-                  setPhoneVerified(true);
-                  setStep("form");
-                  doSignUp();
+                  doPhoneSignUp();
                 }}
               />
               <Button variant="ghost" className="w-full" onClick={() => setStep("form")}>
@@ -179,7 +184,6 @@ const SignUp = () => {
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input id="phone" type="tel" placeholder="+27..." value={phone} onChange={(e) => setPhone(e.target.value)} required />
-                  {phoneVerified && <p className="text-xs text-emerald-600 flex items-center gap-1">✓ Phone verified</p>}
                 </div>
               )}
 
