@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import {
   User, Camera, Save, LogOut, Trash2, Shield, BookOpen, Trophy,
   Award, Flame, BarChart3, Clock, Mail, GraduationCap, Loader2, Eye, EyeOff, Phone,
+  UserPlus, X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
