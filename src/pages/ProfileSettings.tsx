@@ -307,8 +307,63 @@ const ProfileSettings = () => {
                 </div>
               </div>
               {uploading && <p className="text-xs text-muted-foreground text-center mt-2">Uploading avatar...</p>}
-            </div>
+              </div>
 
+              {/* Admin Management */}
+              <div className="bg-card border border-border rounded-xl p-6 shadow-card space-y-4">
+                <h2 className="text-lg font-heading text-foreground flex items-center gap-2">
+                  <UserPlus className="h-5 w-5 text-primary" /> Manage Admins
+                </h2>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Input
+                      type="email"
+                      value={adminEmail}
+                      onChange={(e) => setAdminEmail(e.target.value)}
+                      placeholder="user@example.com"
+                    />
+                    <Button onClick={handleAddAdmin} disabled={adminLoading} size="sm" className="shrink-0">
+                      {adminLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><UserPlus className="h-4 w-4 mr-1" /> Add</>}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Enter the email of an existing user to grant them admin access.</p>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium text-foreground">Current Admins</h3>
+                  {adminListLoading ? (
+                    <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                  ) : adminList.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No admins found.</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {adminList.map((admin) => (
+                        <div key={admin.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{admin.email}</p>
+                            <p className="text-xs text-muted-foreground">
+                              Since {new Date(admin.created_at).toLocaleDateString("en-ZA")}
+                            </p>
+                          </div>
+                          {admin.id !== user?.id && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleRemoveAdmin(admin.email)}
+                              className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            
             {/* Admin Info */}
             {isAdmin && (
               <div className="bg-card border border-border rounded-xl p-6 shadow-card space-y-3">
