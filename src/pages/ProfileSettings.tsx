@@ -69,6 +69,12 @@ const ProfileSettings = () => {
   // Sign out confirm
   const [signOutOpen, setSignOutOpen] = useState(false);
 
+  // Admin management
+  const [adminEmail, setAdminEmail] = useState("");
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [adminList, setAdminList] = useState<AdminUser[]>([]);
+  const [adminListLoading, setAdminListLoading] = useState(false);
+
   useEffect(() => {
     if (profile) {
       setFullName(profile.full_name || "");
