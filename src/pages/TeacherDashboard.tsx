@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Users, BookOpen, Activity, Send, Plus, Clock, CheckCircle, XCircle, Trash2, GraduationCap, FileText, Loader2, ClipboardList, Lock } from "lucide-react";
+import { Users, BookOpen, Activity, Send, Plus, Clock, CheckCircle, XCircle, Trash2, GraduationCap, FileText, Loader2, ClipboardList, Lock, BarChart3 } from "lucide-react";
+import StudentResults from "@/components/teacher/StudentResults";
 import { format } from "date-fns";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
