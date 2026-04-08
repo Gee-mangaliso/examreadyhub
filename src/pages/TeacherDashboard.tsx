@@ -505,6 +505,11 @@ const TeacherDashboard = () => {
                   </div>
                 )}
               </TabsContent>
+
+              {/* Results Tab */}
+              <TabsContent value="results">
+                <StudentResults />
+              </TabsContent>
             </Tabs>
           </div>
         </main>
