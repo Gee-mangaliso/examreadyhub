@@ -371,6 +371,7 @@ const TeacherDashboard = () => {
                 <TabsTrigger value="content"><BookOpen className="h-4 w-4 mr-1" />Content</TabsTrigger>
                 <TabsTrigger value="quizzes"><ClipboardList className="h-4 w-4 mr-1" />Quizzes</TabsTrigger>
                 <TabsTrigger value="activities"><Activity className="h-4 w-4 mr-1" />Activities</TabsTrigger>
+                <TabsTrigger value="results"><BarChart3 className="h-4 w-4 mr-1" />Results</TabsTrigger>
               </TabsList>
 
               {/* Students Tab */}
