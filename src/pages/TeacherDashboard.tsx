@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Users, BookOpen, Activity, Send, Plus, Clock, CheckCircle, XCircle, Trash2, GraduationCap, FileText, Loader2, ClipboardList, Lock } from "lucide-react";
+import { Users, BookOpen, Activity, Send, Plus, Clock, CheckCircle, XCircle, Trash2, GraduationCap, FileText, Loader2, ClipboardList, Lock, BarChart3 } from "lucide-react";
+import StudentResults from "@/components/teacher/StudentResults";
 import { format } from "date-fns";
 import Header from "@/components/Header";
 import PageTransition from "@/components/PageTransition";
@@ -370,6 +371,7 @@ const TeacherDashboard = () => {
                 <TabsTrigger value="content"><BookOpen className="h-4 w-4 mr-1" />Content</TabsTrigger>
                 <TabsTrigger value="quizzes"><ClipboardList className="h-4 w-4 mr-1" />Quizzes</TabsTrigger>
                 <TabsTrigger value="activities"><Activity className="h-4 w-4 mr-1" />Activities</TabsTrigger>
+                <TabsTrigger value="results"><BarChart3 className="h-4 w-4 mr-1" />Results</TabsTrigger>
               </TabsList>
 
               {/* Students Tab */}
@@ -502,6 +504,11 @@ const TeacherDashboard = () => {
                     ))}
                   </div>
                 )}
+              </TabsContent>
+
+              {/* Results Tab */}
+              <TabsContent value="results">
+                <StudentResults />
               </TabsContent>
             </Tabs>
           </div>
