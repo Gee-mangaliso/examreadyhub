@@ -9,6 +9,7 @@ const corsHeaders = {
 const normalizePhoneNumber = (value: string) => {
   const trimmed = value.trim();
   if (trimmed.startsWith("+")) return trimmed;
+
   const digits = trimmed.replace(/\D/g, "");
   if (digits.startsWith("0") && digits.length === 10) {
     return `+27${digits.slice(1)}`;
@@ -16,8 +17,15 @@ const normalizePhoneNumber = (value: string) => {
   if (digits.startsWith("27") && digits.length === 11) {
     return `+${digits}`;
   }
+
   return trimmed;
 };
+
+const errorResponse = (status: number, error: string) =>
+  new Response(JSON.stringify({ error }), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -25,10 +33,7 @@ Deno.serve(async (req) => {
   try {
     const { phone_number } = await req.json();
     if (!phone_number) {
-      return new Response(JSON.stringify({ error: "Phone number required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(400, "Phone number required");
     }
 
     const normalizedPhone = normalizePhoneNumber(phone_number);
@@ -39,24 +44,21 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
     if (!accountSid || !authToken || !twilioPhone) {
-      console.error("Twilio not configured", { hasAccountSid: !!accountSid, hasAuthToken: !!authToken, hasTwilioPhone: !!twilioPhone });
-      return new Response(JSON.stringify({ error: "SMS service not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      console.error("Twilio not configured", {
+        hasAccountSid: !!accountSid,
+        hasAuthToken: !!authToken,
+        hasTwilioPhone: !!twilioPhone,
       });
+      return errorResponse(500, "SMS service not configured");
     }
 
     if (!supabaseUrl || !serviceRoleKey) {
-      console.error("Missing Supabase env", { hasUrl: !!supabaseUrl, hasServiceRoleKey: !!serviceRoleKey });
-      return new Response(JSON.stringify({ error: "Server configuration error" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      console.error("Missing backend env", { hasUrl: !!supabaseUrl, hasServiceRoleKey: !!serviceRoleKey });
+      return errorResponse(500, "Server configuration error");
     }
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
 
     await supabaseAdmin.from("phone_otps").delete().eq("phone_number", normalizedPhone);
@@ -69,10 +71,7 @@ Deno.serve(async (req) => {
 
     if (insertErr) {
       console.error("DB insert error:", insertErr);
-      return new Response(JSON.stringify({ error: "Failed to store OTP" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse(500, "Failed to store OTP");
     }
 
     const twilioUrl = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
@@ -95,24 +94,27 @@ Deno.serve(async (req) => {
       const errText = await twilioRes.text();
       console.error("Twilio error:", errText);
 
-      if (errText.includes('21212')) {
-        return new Response(JSON.stringify({ error: "SMS sender number is invalid. Update your Twilio phone number secret to E.164 format, e.g. +1234567890." }), {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (errText.includes("21212")) {
+        return errorResponse(500, "SMS sender number is invalid. Use a Twilio sender number in E.164 format, e.g. +1234567890.");
       }
 
-      if (errText.includes('21211')) {
-        return new Response(JSON.stringify({ error: "Invalid phone number. Use a real mobile number in international format, e.g. +27831234567." }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      if (errText.includes("21211")) {
+        return errorResponse(400, "Invalid phone number. Use a real mobile number in international format, e.g. +27831234567.");
       }
 
-      return new Response(JSON.stringify({ error: "Failed to send SMS" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (errText.includes("21608")) {
+        return errorResponse(400, "This Twilio account is in trial mode and can only send OTPs to verified recipient numbers. Verify this phone number in Twilio or upgrade the account.");
+      }
+
+      if (errText.includes("21606")) {
+        return errorResponse(400, "Your Twilio sender cannot send SMS to this destination. Check the sender type, region permissions, and messaging setup in Twilio.");
+      }
+
+      if (errText.includes("21408")) {
+        return errorResponse(400, "SMS permissions are not enabled for this destination country in Twilio. Enable the country in Twilio Geo Permissions.");
+      }
+
+      return errorResponse(500, "Failed to send SMS. Check the Twilio logs for the destination number, sender type, and account status.");
     }
 
     return new Response(JSON.stringify({ success: true, phone_number: normalizedPhone }), {
@@ -120,9 +122,6 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error("Error:", error);
-    return new Response(JSON.stringify({ error: "Internal server error" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(500, "Internal server error");
   }
 });

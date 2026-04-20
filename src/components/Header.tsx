@@ -1,12 +1,12 @@
+import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { GraduationCap, Menu, X, Sun, Moon, LogOut, ArrowLeft } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import NotificationBell from "@/components/NotificationBell";
 
-const Header = () => {
+const Header = React.forwardRef<HTMLElement>((_, ref) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -15,15 +15,15 @@ const Header = () => {
 
   const navLinks = [
     { to: "/", label: "Home" },
-    ...(user ? [
-      { to: "/leaderboard", label: "Leaderboard" },
-      ...(!isAdmin && !isTeacher ? [{ to: "/dashboard", label: "Dashboard" }] : []),
-      ...(!isAdmin && !isTeacher ? [{ to: "/invites", label: "Invites" }] : []),
-      ...(!isAdmin && !isTeacher ? [{ to: "/teacher-content", label: "Teacher Content" }] : []),
-      { to: "/profile", label: "Profile" },
-    ] : [
-      { to: "/grades", label: "Grades" },
-    ]),
+    ...(user
+      ? [
+          { to: "/leaderboard", label: "Leaderboard" },
+          ...(!isAdmin && !isTeacher ? [{ to: "/dashboard", label: "Dashboard" }] : []),
+          ...(!isAdmin && !isTeacher ? [{ to: "/invites", label: "Invites" }] : []),
+          ...(!isAdmin && !isTeacher ? [{ to: "/teacher-content", label: "Teacher Content" }] : []),
+          { to: "/profile", label: "Profile" },
+        ]
+      : [{ to: "/grades", label: "Grades" }]),
     ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
     ...(isTeacher ? [{ to: "/teacher", label: "Teacher" }] : []),
   ];
@@ -34,26 +34,25 @@ const Header = () => {
   };
 
   return (
-    <header className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto flex items-center justify-between px-4 h-16">
+    <header ref={ref} className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-sm">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <div className="flex items-center gap-2">
           {location.pathname !== "/" && (
             <button
               onClick={() => navigate(-1)}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               aria-label="Go back"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
           )}
-          <Link to="/" className="flex items-center gap-2 text-foreground font-heading text-xl">
+          <Link to="/" className="flex items-center gap-2 font-heading text-xl text-foreground">
             <GraduationCap className="h-6 w-6 text-primary" />
             ExamReady Hub
           </Link>
         </div>
 
-        {/* Desktop */}
-        <nav className="hidden md:flex items-center gap-6">
+        <nav className="hidden items-center gap-6 md:flex">
           {navLinks.map((l) => (
             <Link
               key={l.to}
@@ -67,7 +66,7 @@ const Header = () => {
           ))}
           <button
             onClick={toggle}
-            className="p-2 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+            className="rounded-md p-2 text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Toggle theme"
           >
             {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -77,7 +76,7 @@ const Header = () => {
             <>
               <span className="text-sm text-muted-foreground">{profile?.full_name || user.email}</span>
               <Button size="sm" variant="outline" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4 mr-1" /> Sign Out
+                <LogOut className="mr-1 h-4 w-4" /> Sign Out
               </Button>
             </>
           ) : (
@@ -92,15 +91,13 @@ const Header = () => {
           )}
         </nav>
 
-        {/* Mobile toggle */}
-        <button className="md:hidden text-foreground" onClick={() => setMenuOpen(!menuOpen)}>
+        <button className="text-foreground md:hidden" onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {menuOpen && (
-        <nav className="md:hidden border-t bg-card px-4 py-4 space-y-3">
+        <nav className="space-y-3 border-t bg-card px-4 py-4 md:hidden">
           {navLinks.map((l) => (
             <Link
               key={l.to}
@@ -114,22 +111,34 @@ const Header = () => {
           <div className="flex gap-3 pt-2">
             <button
               onClick={toggle}
-              className="p-2 rounded-md border border-border text-muted-foreground hover:text-foreground transition-colors"
+              className="rounded-md border border-border p-2 text-muted-foreground transition-colors hover:text-foreground"
               aria-label="Toggle theme"
             >
               {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
             {user ? (
-              <Button size="sm" variant="outline" className="flex-1" onClick={() => { handleSignOut(); setMenuOpen(false); }}>
-                <LogOut className="h-4 w-4 mr-1" /> Sign Out
+              <Button
+                size="sm"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  handleSignOut();
+                  setMenuOpen(false);
+                }}
+              >
+                <LogOut className="mr-1 h-4 w-4" /> Sign Out
               </Button>
             ) : (
               <>
                 <Button asChild size="sm" variant="outline" className="flex-1">
-                  <Link to="/login" onClick={() => setMenuOpen(false)}>Login</Link>
+                  <Link to="/login" onClick={() => setMenuOpen(false)}>
+                    Login
+                  </Link>
                 </Button>
                 <Button asChild size="sm" className="flex-1">
-                  <Link to="/signup" onClick={() => setMenuOpen(false)}>Sign Up</Link>
+                  <Link to="/signup" onClick={() => setMenuOpen(false)}>
+                    Sign Up
+                  </Link>
                 </Button>
               </>
             )}
@@ -138,6 +147,8 @@ const Header = () => {
       )}
     </header>
   );
-};
+});
+
+Header.displayName = "Header";
 
 export default Header;
