@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ interface OTPVerificationProps {
   onVerified: () => void;
 }
 
-const OTPVerification = ({ phoneNumber, onVerified }: OTPVerificationProps) => {
+const OTPVerification = React.forwardRef<HTMLDivElement, OTPVerificationProps>(({ phoneNumber, onVerified }, ref) => {
   const [otp, setOtp] = useState("");
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -24,12 +24,18 @@ const OTPVerification = ({ phoneNumber, onVerified }: OTPVerificationProps) => {
       body: { phone_number: phoneNumber },
     });
     setSending(false);
+
     if (error || data?.error) {
-      toast({ title: "Failed to send OTP", description: data?.error || error?.message, variant: "destructive" });
-    } else {
-      setSent(true);
-      toast({ title: "OTP sent!", description: `Verification code sent to ${phoneNumber}` });
+      toast({
+        title: "Failed to send OTP",
+        description: data?.error || error?.message,
+        variant: "destructive",
+      });
+      return;
     }
+
+    setSent(true);
+    toast({ title: "OTP sent!", description: `Verification code sent to ${phoneNumber}` });
   };
 
   const verifyOTP = async () => {
@@ -37,28 +43,42 @@ const OTPVerification = ({ phoneNumber, onVerified }: OTPVerificationProps) => {
       toast({ title: "Enter 6-digit code", variant: "destructive" });
       return;
     }
+
     setVerifying(true);
     const { data, error } = await supabase.functions.invoke("verify-otp", {
       body: { phone_number: phoneNumber, otp_code: otp },
     });
     setVerifying(false);
+
     if (error || data?.error) {
-      toast({ title: "Verification failed", description: data?.error || error?.message, variant: "destructive" });
-    } else {
-      toast({ title: "Phone verified!" });
-      onVerified();
+      toast({
+        title: "Verification failed",
+        description: data?.error || error?.message,
+        variant: "destructive",
+      });
+      return;
     }
+
+    toast({ title: "Phone verified!" });
+    onVerified();
   };
 
   return (
-    <div className="space-y-4">
+    <div ref={ref} className="space-y-4">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Phone className="h-4 w-4" />
         <span>Verify {phoneNumber}</span>
       </div>
       {!sent ? (
         <Button onClick={sendOTP} disabled={sending} className="w-full">
-          {sending ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Sending…</> : "Send Verification Code"}
+          {sending ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Sending…
+            </>
+          ) : (
+            "Send Verification Code"
+          )}
         </Button>
       ) : (
         <div className="space-y-3">
@@ -73,7 +93,17 @@ const OTPVerification = ({ phoneNumber, onVerified }: OTPVerificationProps) => {
             />
           </div>
           <Button onClick={verifyOTP} disabled={verifying} className="w-full">
-            {verifying ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Verifying…</> : <><CheckCircle className="h-4 w-4 mr-2" />Verify</>}
+            {verifying ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verifying…
+              </>
+            ) : (
+              <>
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Verify
+              </>
+            )}
           </Button>
           <Button variant="ghost" size="sm" onClick={sendOTP} disabled={sending} className="w-full text-xs">
             Resend code
@@ -82,6 +112,8 @@ const OTPVerification = ({ phoneNumber, onVerified }: OTPVerificationProps) => {
       )}
     </div>
   );
-};
+});
+
+OTPVerification.displayName = "OTPVerification";
 
 export default OTPVerification;
