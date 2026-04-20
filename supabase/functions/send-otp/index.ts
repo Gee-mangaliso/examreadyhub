@@ -102,6 +102,10 @@ Deno.serve(async (req) => {
         return errorResponse(400, "Invalid phone number. Use a real mobile number in international format, e.g. +27831234567.");
       }
 
+      if (errText.includes("21266")) {
+        return errorResponse(400, "The recipient number cannot be the same as your Twilio sender number. Use a different mobile number for testing OTP delivery.");
+      }
+
       if (errText.includes("21608")) {
         return errorResponse(400, "This Twilio account is in trial mode and can only send OTPs to verified recipient numbers. Verify this phone number in Twilio or upgrade the account.");
       }
